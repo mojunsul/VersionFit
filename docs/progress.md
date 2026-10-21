@@ -8,9 +8,9 @@
 |---|---|---|---|
 | F2001 | 항목 메타데이터 적재 | 완료 | `data_prep/initializr.py` → `data/items.json` (204건) |
 | F2002 | 메타데이터 색인 | 완료 | `scripts/build_items.py`, 두 번 실행해도 204건 유지 확인 |
-| F2003 | 검색어 추출(프롬프트1) | 미착수 | 다음 작업 |
-| F2004 | 외부 문서 수집(프롬프트2) | 일부 | 원문 수집·정리·후보 검색 완료 (`data_prep/boot_docs.py`, `scripts/fetch_docs.py`). 프롬프트2 미착수 |
-| F2005 | 외부 문서 색인 | 일부 | 청킹 완료 (`vector_store/chunking.py`). `docs` 컬렉션 저장 미착수 |
+| F2003 | 검색어 추출(프롬프트1) | 완료 | `rag/prompts.py` `SEARCH_TERMS`, `rag/collect.py` `extract_terms` |
+| F2004 | 외부 문서 수집(프롬프트2) | 완료 | 원문 `data_prep/boot_docs.py`, `scripts/fetch_docs.py` / 선별·캐시 `rag/collect.py` |
+| F2005 | 외부 문서 색인 | 완료 | `vector_store/chunking.py`, `rag/collect.py` `collect()` |
 | F2006 | 근거 검색·병합 | 미착수 | |
 | F2007 | LangGraph 답변 생성 | 미착수 | |
 | F2008 | 근거 표시 | 일부 | `app.py`의 `cited_sources`/`render_sources` 재사용 예정 |
@@ -33,7 +33,7 @@
 | 외부 문서: spring-boot 저장소 AsciiDoc을 GitHub API로 수집 | docs.spring.io에는 검색 API가 없음. 명세가 허용하는 "도메인별 공개 API"이고, HTML 노이즈가 없고 Apache-2.0 |
 | 후보 검색: 로컬 원문 사본에서 검색어의 경로·본문 출현 횟수(경로 가중 20배)로 후보 → 프롬프트2 선별 | 경로만으로는 개념 검색어(`jackson`, `jpa`)가 0건 (4.2). F2004의 "출처에서 검색해 후보를 모은다"를 충족 |
 | 수집 방식: 원문은 배치(`scripts/fetch_docs.py`)로 1회 수집해 `data/boot_docs/`에 보관, 청킹·색인은 질문 시점 + 캐시, 대표 항목은 사전 색인으로 워밍업 | F2004, NF2002와 검증 4.2("같은 질문 재수집 안 함")가 질문 시점 수집을 전제. 서비스는 외부 호출 없이 로컬 사본만 읽음 (사용자 확인 2026-10-21) |
-| 수집 캐시: 별도 파일 없이 `docs` 청크 메타데이터 `(item_id, boot_version, query)`로 조회 | 메타데이터에 이미 있는 값 |
+| 수집 캐시: `data/collect_log.json`에 `(항목, 버전, 검색어)` → 선택 문서, `(항목, 버전, 질문)` → 검색어. 문서 중복은 Chroma 메타데이터로 확인 | 새 문서를 못 만든 검색어도 기록해야 함. 프롬프트1은 같은 질문에도 다른 검색어를 내서 질문별 검색어도 캐시 (3절) |
 | 청킹 직접 구현 (헤더 경로 접두, 문단·구분자 블록 단위) | langchain-text-splitters에 AsciiDoc 헤더 분할기가 없고, 글자 수 분할기는 코드 블록을 자른다 |
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
 | UI: Streamlit (`app.py` 이어 쓰기) | 명세 기본. HTML 프론트(F2013)는 심화라 보류 |
@@ -66,6 +66,9 @@
   - 정리 후 남은 매크로는 `https:` 링크(`url[표시문]` 형식, 그대로 둠), `reference:partial$...[]` 3건뿐. `javadoc:`에는 `{url-...-javadoc}/` 접두사와 `Class#method(...)` 형식도 있어 처리함.
   - 본문 검색 후보 (4개 버전 동일): `jackson` → `how-to/spring-mvc`, `features/json` 등, `jpa`+`datasource` → `how-to/data-access`, `data/sql` 등, `kafka`+`json deserializer` → `messaging/kafka` 1위.
 - 청킹 (4.0.x 124건, size 1000/overlap 200): 청크 1583개, 평균 694자, 중앙 736자, 최대 4412자. 1000자 초과 22건은 모두 코드·표 블록(자르지 않음).
+- 질문 시점 수집 (`rag/collect.py`, kafka, 대표 질문 1, 2026-10-21): 4.0.x 첫 수집 약 6초, `messaging/kafka.adoc` 청크 11개 색인. 같은 질문 재실행 0.0초, LLM·임베딩 호출 없음. 3.5.x는 별도 11개, 버전 섞임 0. `item_id`+`boot_version` 필터 유사도 검색 1위가 `JacksonJsonDeserializer` 청크(Additional Kafka Properties).
+  - 질문별 검색어 캐시 전에는 같은 질문 재실행에서 프롬프트1이 다른 검색어를 내 후보 검색·프롬프트2가 다시 호출됐다.
+  - 프롬프트1 검색어가 `kafka json deserializer`처럼 여러 단어 구라 본문에 그대로 나오는 경우가 적고, 후보가 1~2개로 좁다. 대표 질문 2, 3에서 후보가 충분한지 확인 필요.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -86,12 +89,7 @@
 
 ## 5. 다음 작업 (순서대로)
 
-1. F2003~F2005 나머지: `rag/prompts.py`, `rag/collect.py`
-   - 완료: 원문 수집·정리·후보 검색(`data_prep/boot_docs.py`), 청킹(`vector_store/chunking.py`)
-   - 프롬프트1: 항목·질문 → 검색어 JSON 배열 (항목 이름 항상 포함). 한국어 질문도 영어 검색어로 (원문이 영어)
-   - 캐시: `docs` 메타데이터 `(item_id, boot_version, query)` 조회 → 있으면 건너뜀
-   - 후보: `boot_docs.search(load_docs(v), terms, N)` → 프롬프트2(제목·경로만 보여주고 선택) → `doc_id_for_item(doc_url)` 문서는 항상 포함. 후보 수 N은 `config.toml`에 추가
-   - 색인: `chunk()` 결과에 docs/rag-design.md 2절 메타데이터를 붙여 `docs` 컬렉션에 저장
+1. 후보 검색 폭 확인: 대표 질문 2(pulsar), 3(web+jackson)으로 `collect` 실행, 후보가 좁으면 검색어를 단어 단위로도 매칭
 2. F2006~F2008 `rag/`: LangGraph retrieve/generate, 근거 병합·중복 제거, 출처 유형 구분
 3. F2009~F2012 `app.py`: 항목+버전 선택, 대화 분리, 진행 상태, 안내 문구
 4. F2010, F2011 `services/`
