@@ -72,7 +72,8 @@ def download(version: str) -> int:
 def clean(text: str) -> str:
     """AsciiDoc 매크로를 읽을 수 있는 글로 바꾼다. javadoc은 패키지 전체 이름을 남긴다(버전별 패키지 차이가 답이 된다)."""
     text = re.sub(r"(?m)^\[\[[^\]]+\]\]\n", "", text)
-    text = re.sub(r"javadoc:([\w.$]+)\[([^\]]*)\]", lambda m: m[2] or f"`{m[1]}`", text)
+    # 외부 javadoc 속성 접두사({url-...-javadoc}/)는 버리고, 멤버 참조(Class#method(...))는 남긴다
+    text = re.sub(r"javadoc:(?:\{[^}]+\}/)?([^\s\[]+)\[([^\]]*)\]", lambda m: m[2] or f"`{m[1]}`", text)
     text = re.sub(r"configprop:([\w.\-\[\]*]+?)\[[^\]]*\]", r"`\1`", text)
     # javadoc을 먼저 바꿔야 표시문 안의 [] 중첩이 사라진다
     text = re.sub(r"xref:([^\[\s]+)\[([^\]]*)\]", lambda m: m[2] or m[1].split("#")[-1], text)
