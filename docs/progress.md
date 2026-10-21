@@ -16,7 +16,7 @@
 | F2008 | 근거 표시 | 완료 | `app.py` `cited_sources`/`render_sources` (출처 유형 추가) |
 | F2009 | 항목·버전 선택, 대화 분리 | 완료 | `app.py` 사이드바, `session_state.chats[(item_id, version)]`. 항목 선택 key=`item_id` (F2011 카드 이동용) |
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
-| F2011 | 조건 기반 항목 탐색 | 일부 | 로직 완료 `services/explore.py`. 화면(카드 → 항목 대화 이동)은 HTML 프론트 전환 때 |
+| F2011 | 조건 기반 항목 탐색 | 완료 | `services/explore.py`, `app.py` 탐색 영역(2열 카드, 버튼 → `item_id` 변경으로 해당 항목 대화 이동) |
 | F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
@@ -84,6 +84,7 @@
   - 4.0.x 문서 원문에는 `spring-boot-starter-kafka`가 0건 (프로젝트 이름 `spring-kafka`만). 문서만으로는 4.x 스타터 좌표를 답할 수 없어 Initializr 좌표를 근거로 추가.
 - 정리 규칙 보완: `javadoc:X[format=annotation]`이 4개 버전 3567건, `[format=full]` 1건 → 표시문이 아니라 옵션이므로 `` `@X` `` / `` `X` ``로. AsciiDoc 따옴표 `"`...`"` 639건 → `"..."` (줄바꿈·중첩 25건 남음). 보완 후 `docs` 컬렉션과 수집 캐시를 지우고 재색인.
 - 가이드 (`services/guide.py`): kafka 4.0.x `spring-boot-starter-kafka` [Initializr 좌표 근거], kafka 3.5.x 좌표 "문서에서 확인되지 않는다"(지어내지 않음), web 4.0.x `spring-boot-starter-webmvc`. AppTest 버튼 → 대화에 가이드·근거 7건.
+- 탐색 화면 (AppTest, 2026-10-21): "메시징 큐에 쓸 수 있는 의존성" → 카드 8개(rabbitmq, kafka, ...), kafka 카드 버튼 → 사이드바 선택 kafka, 제목 Kafka로 이동, 카드 유지. 무관 조건 → 안내 문구. 폼 key와 결과 session key가 같으면(`explore`) Streamlit 예외 → 결과 key를 `explore_result`로 분리.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -108,12 +109,16 @@
 ### 4.3-2 3.x 의존성 좌표
 Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문서에 적힌 만큼만 나온다 (kafka는 "확인되지 않는다"). 3.x 좌표 공개 API 미확인.
 
+### 4.3-3 Spring Boot 문서 밖 항목 (2026-10-21 확인)
+items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113(그중 docs.spring.io의 다른 Spring 프로젝트 79, techdocs.broadcom.com 8 등), 링크 없음 18. 4.1.x 문서에 id·이름 문자열이 안 나오는 항목 최대 106 (단순 문자열 비교라 과대 추정). 예: springdoc-openapi(springdoc.org)는 가이드에서 좌표만 나오고 설정·import는 "확인되지 않는다".
+대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`app.py` `no_docs_notice`). 외부 문서 수집은 심화 F2016 (docs.spring.io 79건부터) — 결정 필요.
+
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.
 
 ## 5. 다음 작업 (순서대로)
 
-1. HTML·CSS·JS 프론트 전환: 백엔드 API 방식과 Streamlit 유지 여부 결정 → 기존 화면 기능(F2008~F2012) 이식 + F2011 카드 화면
+1. HTML·CSS·JS 프론트 전환: 백엔드 API 방식과 Streamlit 유지 여부 결정 → 화면 기능(F2008~F2012) 이식
 2. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약

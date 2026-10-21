@@ -19,7 +19,7 @@
 
 | 경로 | 책임 |
 |---|---|
-| `app.py` | Streamlit 진입점. 항목·버전 선택, (항목, 버전)별 대화, 수집 진행 상태, 근거 표시 (`cited_sources`, `render_sources`) |
+| `app.py` | Streamlit 진입점. 조건 탐색 카드, 항목·버전 선택, (항목, 버전)별 대화, 사용 가이드 버튼, 수집 진행 상태, 근거 표시 |
 | `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 (루트 기준 경로 계산 때문에 루트에 둔다) |
 | `scripts/` | 배치 스크립트. 루트에서 `python -m scripts.<이름>`으로 실행. `build_items`(items 색인), `fetch_docs`(문서 원문 수집) |
 | `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색) |

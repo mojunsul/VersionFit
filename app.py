@@ -1,4 +1,4 @@
-"""버전 인지형 Spring Boot 문서 Q&A 화면. (F2008, F2009, F2010, F2012)
+"""버전 인지형 Spring Boot 문서 Q&A 화면. (F2008~F2012)
 
 실행:
     streamlit run app.py
@@ -15,10 +15,11 @@ import re
 import streamlit as st
 from dotenv import load_dotenv
 
-from data_prep.boot_docs import VERSIONS, docs_dir
+from data_prep.boot_docs import VERSIONS, doc_id_for_item, docs_dir
 from data_prep.initializr import load_items
 from rag.collect import collect
 from rag.graph import answer
+from services.explore import explore
 from services.guide import guide
 from vector_store.store import get_collection
 
@@ -63,6 +64,17 @@ def render_sources(answer: str, sources: list[dict]) -> None:
             st.markdown(f"**[근거 {number}]** {source['title']} · {source['source_type']} · [원문]({source['url']})")
 
 
+def no_docs_notice(item: dict, version: str, retry_hint: bool) -> str:
+    """문서 근거가 없을 때 이유를 알린다. 항목 문서가 Spring Boot 밖이면 질문을 바꿔도 결과가 같다."""
+    url = item["doc_url"]
+    if url and not doc_id_for_item(url):
+        return (f"이 의존성은 Spring Boot 공식 문서가 아니라 외부 문서([{url}]({url}))에서 설명합니다. "
+                f"이 서비스는 Spring Boot {version} 문서만 근거로 쓰므로, 설정과 사용법은 원문을 확인하세요.")
+    if not url:
+        return f"이 의존성은 Initializr에 연결된 문서가 없고, Spring Boot {version} 문서에서도 관련 내용을 찾지 못했습니다."
+    return f"Spring Boot {version} 문서에서 관련 내용을 찾지 못했습니다." + (" 질문을 바꿔 보세요." if retry_hint else "")
+
+
 st.set_page_config(page_title="Spring Boot 버전별 문서 Q&A", page_icon="🍃")
 st.title("🍃 Spring Boot 버전별 문서 Q&A")
 st.caption("의존성과 Spring Boot 버전을 고르면, 그 버전의 공식 문서를 근거로 답하고 출처를 함께 보여 줍니다.")
@@ -91,8 +103,33 @@ with st.sidebar:
     if st.button("이 대화 지우기", width="stretch", disabled=not item_id):
         chats[(item_id, version)] = []
 
+def open_item(found_id: str) -> None:
+    st.session_state.item_id = found_id  # 위젯이 그려지기 전(콜백)에 바꿔야 사이드바 선택이 따라온다
+
+
+with st.expander("🔎 조건으로 의존성 찾기", expanded=not item_id):
+    with st.form("explore"):
+        condition = st.text_input("조건", placeholder="예: 메시징 큐에 쓸 수 있는 의존성")
+        if st.form_submit_button("찾기") and condition.strip():
+            try:
+                with st.spinner("조건에 맞는 의존성을 고르는 중..."):
+                    st.session_state.explore_result = (condition, explore(condition))
+            except Exception:
+                st.error("의존성을 찾지 못했습니다. 키와 네트워크를 확인한 뒤 다시 시도해 주세요.")
+    if "explore_result" in st.session_state:
+        searched, found = st.session_state.explore_result
+        if not found:
+            st.info(f"'{searched}'에 맞는 의존성을 찾지 못했습니다. 조건을 바꿔 보세요.")
+        for row in range(0, len(found), 2):
+            for col, card in zip(st.columns(2), found[row:row + 2]):
+                with col.container(border=True):
+                    st.markdown(f"**{card['name']}** · {card['group']}")
+                    st.caption(card["reason"])
+                    st.button("이 의존성으로 대화하기", key=f"open_{card['item_id']}",
+                              on_click=open_item, args=(card["item_id"],))
+
 if not item_id:
-    st.info("왼쪽에서 질문할 의존성을 먼저 고르세요.")
+    st.info("왼쪽에서 질문할 의존성을 고르거나, 위에서 조건으로 찾아보세요.")
     st.stop()
 if not any(docs_dir(version).rglob("*.adoc")):
     st.warning(f"{version} 문서 원문이 없습니다. 먼저 `python -m scripts.fetch_docs`를 실행해 주세요.")
@@ -142,6 +179,6 @@ if question:
         if result:
             st.markdown(result["answer"])
             if not any(s["source_type"].startswith("Spring Boot") for s in result["sources"]):
-                st.info(f"{version} 문서에서 이 질문과 관련된 내용을 찾지 못했습니다. 질문을 바꿔 보세요.")
+                st.info(no_docs_notice(item, version, retry_hint=not guide_requested))
             render_sources(result["answer"], result["sources"])
             messages.append({"role": "assistant", "content": result["answer"], "sources": result["sources"]})
