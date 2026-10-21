@@ -4,7 +4,7 @@
 
 # 구조
 data_prep(도메인 의존) / vector_store(ChromaDB, items·docs 컬렉션) / rag(LangGraph retrieve·generate) / services / app.py(Streamlit, 기존 골격을 이어 씀)
-설정값(청크, Top-k, 검색 방식)은 config.yaml.
+설정값(청크, Top-k, 검색 방식)은 config.toml.
 
 # 규칙
 - 코드 작성 전에 계획을 먼저 보여주고 확인받는다.
