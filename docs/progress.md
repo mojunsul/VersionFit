@@ -16,7 +16,7 @@
 | F2008 | 근거 표시 | 완료 | `app.py` `cited_sources`/`render_sources` (출처 유형 추가) |
 | F2009 | 항목·버전 선택, 대화 분리 | 완료 | `app.py` 사이드바, `session_state.chats[(item_id, version)]`. 항목 선택 key=`item_id` (F2011 카드 이동용) |
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
-| F2011 | 조건 기반 항목 탐색 | 미착수 | 아래 4.1 문제 반영 필요 |
+| F2011 | 조건 기반 항목 탐색 | 일부 | 로직 완료 `services/explore.py`. 화면(카드 → 항목 대화 이동)은 HTML 프론트 전환 때 |
 | F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
@@ -36,7 +36,7 @@
 | 수집 캐시: `data/collect_log.json`에 `(항목, 버전, 검색어)` → 선택 문서, `(항목, 버전, 질문)` → 검색어. 문서 중복은 Chroma 메타데이터로 확인 | 새 문서를 못 만든 검색어도 기록해야 함. 프롬프트1은 같은 질문에도 다른 검색어를 내서 질문별 검색어도 캐시 (3절) |
 | 청킹 직접 구현 (헤더 경로 접두, 문단·구분자 블록 단위) | langchain-text-splitters에 AsciiDoc 헤더 분할기가 없고, 글자 수 분할기는 코드 블록을 자른다 |
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
-| UI: Streamlit (`app.py` 이어 쓰기) | 명세 기본. HTML 프론트(F2013)는 심화라 보류 |
+| UI: 현재 Streamlit `app.py`. F2011 로직 다음에 HTML·CSS·JS 프론트로 전환 예정 (사용자 요청, 2026-10-21) | 로직(`rag/`, `services/`)은 UI와 분리돼 있어 `app.py`만 다시 만들면 된다. 미결: 백엔드 API 방식(FastAPI는 필수 라이브러리 목록 밖 / 표준 `http.server`), Streamlit 유지 여부(명세 F2013 문구 확인 필요) |
 | Vector DB: ChromaDB, 컬렉션 `items`/`docs` | 명세 필수 라이브러리 |
 | 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
 | 설정 파일: `config.toml` (tomllib) | 의존성 추가 없이 읽음 |
@@ -90,7 +90,10 @@
 
 ### 4.1 한국어 조건 검색이 약함 (F2011)
 항목 설명이 영어라 "메시징 큐에 쓸 수 있는 의존성"은 상위 30위 안에 Kafka/RabbitMQ가 없다. "message queue"는 RabbitMQ 1위. "데이터베이스에 접근하는 JPA", "보안 로그인 인증"은 정상.
-대응 계획(미검증): 조건을 LLM으로 영어 검색어로 바꿔 검색 → 후보 30개 → LLM이 조건에 맞는 항목만 선별.
+해결 (`services/explore.py`, 2026-10-21): 조건 → LLM 영어 검색 문장 → items 후보 30개 → LLM이 맞는 항목만 이유와 함께 선별.
+- 한국어 직접 검색 순위 → 탐색 결과: 메시징 큐 kafka·rabbitmq 30위 밖 → 1·2위, 보안 로그인 security 3·oauth2-client 8 → 1·2위, 실시간 양방향 websocket 4 → 1위, JPA data-jpa 1 → 1위.
+- 프롬프트 예시에 테스트 조건(메시징 큐→Kafka, RabbitMQ)을 넣었다가 무관한 예시(캐시→Redis)로 교체 후 재확인.
+- 무관한 조건(냉장고 온도, 점심 메뉴)에서 처음엔 cache·quartz 등을 억지로 골라 "목적과 무관하면 고르지 않는다" 규칙 추가 → 6회 모두 빈 결과.
 
 ### 4.2 경로 매칭만으로는 후보가 부족함 (F2004)
 해결: 원문 사본의 본문 검색으로 변경 (2절). 대표 질문 3의 `jackson`이 `features/json.adoc`을 2위로 찾는다.
@@ -110,7 +113,7 @@ Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문�
 
 ## 5. 다음 작업 (순서대로)
 
-1. F2011 `services/explore.py` 조건 기반 항목 탐색 (카드 → 항목 대화 이동, 4.1 문제 반영)
+1. HTML·CSS·JS 프론트 전환: 백엔드 API 방식과 Streamlit 유지 여부 결정 → 기존 화면 기능(F2008~F2012) 이식 + F2011 카드 화면
 2. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약

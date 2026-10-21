@@ -28,7 +28,7 @@ def chat_model() -> ChatOpenAI:
     return ChatOpenAI(model=CONFIG["models"]["chat"], api_key=key, base_url=CONFIG["models"]["base_url"])
 
 
-def _json_list(text: str) -> list:
+def json_list(text: str) -> list:
     """LLM 답에서 JSON 배열만 꺼낸다. 코드 블록으로 감싸거나 설명을 붙여도 동작하게 한다."""
     m = re.search(r"\[.*\]", text, re.S)
     try:
@@ -42,7 +42,7 @@ def extract_terms(item: dict, version: str, question: str, llm: ChatOpenAI) -> l
     """프롬프트1. 항목 이름은 항상 포함한다. 파싱에 실패하면 항목 이름만 쓴다."""
     reply = llm.invoke(SEARCH_TERMS.format(
         name=item["name"], description=item["description"], version=version, question=question)).content
-    terms = [str(t).strip().lower() for t in _json_list(reply) if str(t).strip()]
+    terms = [str(t).strip().lower() for t in json_list(reply) if str(t).strip()]
     return list(dict.fromkeys([item["name"].lower()] + terms))
 
 
@@ -53,7 +53,7 @@ def select_docs(item: dict, version: str, question: str, candidates: list[str], 
     max_docs = CONFIG["collect"]["max_docs"]
     reply = llm.invoke(SELECT_DOCS.format(
         version=version, name=item["name"], question=question, candidates=lines, max_docs=max_docs)).content
-    picked = [candidates[n - 1] for n in _json_list(reply) if isinstance(n, int) and 1 <= n <= len(candidates)]
+    picked = [candidates[n - 1] for n in json_list(reply) if isinstance(n, int) and 1 <= n <= len(candidates)]
     return list(dict.fromkeys(picked))[:max_docs]
 
 

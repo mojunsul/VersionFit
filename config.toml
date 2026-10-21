@@ -17,6 +17,10 @@ fetch_k = 30          # mmr일 때 먼저 가져올 후보 수
 candidates = 10      # 프롬프트2에 보여 줄 후보 문서 수
 max_docs = 3         # 질문 한 번에 프롬프트2가 고를 최대 문서 수
 
+[explore]
+candidates = 30      # 조건 탐색에서 items 유사도 검색으로 모을 후보 수
+max_items = 8        # LLM이 고를 최대 항목 수
+
 [paths]
 chroma_dir = "chroma_db"
 items_json = "data/items.json"

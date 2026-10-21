@@ -25,7 +25,7 @@
 | `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색) |
 | `vector_store/` | Chroma와 청킹. 도메인 모름. `store.py`(컬렉션), `chunking.py`(예정) |
 | `rag/` (예정) | LLM 흐름. `prompts.py`(프롬프트 3개), `collect.py`(질문 시점 수집 F2003~F2005), `graph.py`(LangGraph retrieve/generate) |
-| `services/` | `guide.py`(버전 맞춤 사용 가이드 F2010), `explore.py`(조건 기반 항목 탐색 F2011, 예정) |
+| `services/` | `guide.py`(버전 맞춤 사용 가이드 F2010), `explore.py`(조건 기반 항목 탐색 F2011) |
 | `data/` | `items.json`(커밋). gitignore: `boot_docs/`(원문 사본), `coordinates/`(버전별 좌표), `collect_log.json`(수집 캐시) |
 
 # 실행 (Windows, Git Bash 기준)
