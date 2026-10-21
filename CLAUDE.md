@@ -32,7 +32,7 @@
 ```
 python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
 .venv/Scripts/python -m scripts.build_items   # 기대 출력: 로드한 항목 204건, 색인된 청크 204건
-.venv/Scripts/python -m scripts.fetch_docs    # 첫 실행 약 10분. 기대 출력: 버전별 보관 문서 약 127건
+.venv/Scripts/python -m scripts.fetch_docs    # 첫 실행 약 10분. 기대 출력: 보관 문서 4.1.x 128, 4.0.x 124, 3.5.x/3.4.x 122건
 .venv/Scripts/streamlit run app.py
 ```
 
