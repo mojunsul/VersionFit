@@ -13,11 +13,11 @@
 | F2005 | 외부 문서 색인 | 완료 | `vector_store/chunking.py`, `rag/collect.py` `collect()` |
 | F2006 | 근거 검색·병합 | 완료 | `rag/graph.py` `retrieve` (items 항목 청크 항상 + docs 항목·버전 필터 검색, 중복 제거) |
 | F2007 | LangGraph 답변 생성 | 완료 | `rag/graph.py` `generate`, `answer()`. 아래 4.3 답변 품질 한계 |
-| F2008 | 근거 표시 | 일부 | `app.py`의 `cited_sources`/`render_sources` 재사용 예정 |
-| F2009 | 항목·버전 선택, 대화 분리 | 미착수 | 대화 기록 키 = (항목, 버전) |
+| F2008 | 근거 표시 | 완료 | `app.py` `cited_sources`/`render_sources` (출처 유형 추가) |
+| F2009 | 항목·버전 선택, 대화 분리 | 완료 | `app.py` 사이드바, `session_state.chats[(item_id, version)]`. 항목 선택 key=`item_id` (F2011 카드 이동용) |
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 미착수 | |
 | F2011 | 조건 기반 항목 탐색 | 미착수 | 아래 4.1 문제 반영 필요 |
-| F2012 | 진행 상태·안내 | 미착수 | 색인 0건, GMS_KEY 누락, 검색 결과 없음 |
+| F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
 | F2013, F2016 | 심화 | 보류 | |
@@ -78,6 +78,7 @@
   - 같은 물음을 따로 ("KafkaProperties 클래스의 패키지는?"): 4번 중 3번 정답 (3.5.x 1번 "확인되지 않는다").
 - GMS 모델 (2026-10-21): `/models` 목록 조회는 500 에러로 미지원. 직접 호출 성공: gpt-5.4-nano, gpt-5.4-mini, gpt-5.4, gpt-5-mini, gpt-5, gpt-4.1-mini, gpt-4o-mini. 명세 PDF 영문 텍스트에 답변 모델 지정 없음 (한글은 pdftotext로 추출 안 돼 미확인).
 - 모델 비교 (대표 질문 1, 버전별 2회 = 4회, 프롬프트 규칙 추가 후): nano 3/4 평균 5.2초, **mini 4/4 평균 4.3초**, gpt-5.4 4/4 평균 5.9초. mini로 바꾼 뒤 pulsar 4.0.x·GraphQL "확인되지 않는다" 확인도 통과. 표본이 작아 F2015에서 더 넓게 비교.
+- 화면 (`app.py`, Streamlit AppTest, 2026-10-21): kafka·4.0.x 선택 → 사이드바 "항목 204건 · 문서 청크 11건", 질문 → 상태 "이미 색인된 문서로 답합니다", 답변에 `JacksonJsonDeserializer`·`kafka.autoconfigure`, 근거 2건 표시. 3.5.x로 바꾸면 대화 0건, 4.0.x로 돌아오면 2건 유지.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -101,9 +102,8 @@
 
 ## 5. 다음 작업 (순서대로)
 
-1. F2009~F2012 `app.py`: 항목+버전 선택, 대화 분리, 진행 상태, 안내 문구. `get_model`의 하드코딩 모델(`gpt-5.4-nano`)을 `rag.collect.chat_model`로 교체
-2. F2010, F2011 `services/`
-3. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
+1. F2010, F2011 `services/` (화면에 붙이기 포함)
+2. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약
 - 기획 문서 → 라이브러리 버전·설정 → items 색인 (F2001, F2002)
