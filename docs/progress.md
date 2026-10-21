@@ -11,14 +11,14 @@
 | F2003 | 검색어 추출(프롬프트1) | 완료 | `rag/prompts.py` `SEARCH_TERMS`, `rag/collect.py` `extract_terms` |
 | F2004 | 외부 문서 수집(프롬프트2) | 완료 | 원문 `data_prep/boot_docs.py`, `scripts/fetch_docs.py` / 선별·캐시 `rag/collect.py` |
 | F2005 | 외부 문서 색인 | 완료 | `vector_store/chunking.py`, `rag/collect.py` `collect()` |
-| F2006 | 근거 검색·병합 | 미착수 | |
-| F2007 | LangGraph 답변 생성 | 미착수 | |
+| F2006 | 근거 검색·병합 | 완료 | `rag/graph.py` `retrieve` (items 항목 청크 항상 + docs 항목·버전 필터 검색, 중복 제거) |
+| F2007 | LangGraph 답변 생성 | 완료 | `rag/graph.py` `generate`, `answer()`. 아래 4.3 답변 품질 한계 |
 | F2008 | 근거 표시 | 일부 | `app.py`의 `cited_sources`/`render_sources` 재사용 예정 |
 | F2009 | 항목·버전 선택, 대화 분리 | 미착수 | 대화 기록 키 = (항목, 버전) |
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 미착수 | |
 | F2011 | 조건 기반 항목 탐색 | 미착수 | 아래 4.1 문제 반영 필요 |
 | F2012 | 진행 상태·안내 | 미착수 | 색인 0건, GMS_KEY 누락, 검색 결과 없음 |
-| F2014 | 심화: MMR | 미착수 | 선택함 |
+| F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
 | F2013, F2016 | 심화 | 보류 | |
 
@@ -38,7 +38,7 @@
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
 | UI: Streamlit (`app.py` 이어 쓰기) | 명세 기본. HTML 프론트(F2013)는 심화라 보류 |
 | Vector DB: ChromaDB, 컬렉션 `items`/`docs` | 명세 필수 라이브러리 |
-| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-nano` | GMS에서 임베딩 동작 확인 (1536차원) |
+| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
 | 설정 파일: `config.toml` (tomllib) | 의존성 추가 없이 읽음 |
 | 위험 도메인 아님, 면책 문구 없음 | |
 
@@ -68,7 +68,16 @@
 - 청킹 (4.0.x 124건, size 1000/overlap 200): 청크 1583개, 평균 694자, 중앙 736자, 최대 4412자. 1000자 초과 22건은 모두 코드·표 블록(자르지 않음).
 - 질문 시점 수집 (`rag/collect.py`, kafka, 대표 질문 1, 2026-10-21): 4.0.x 첫 수집 약 6초, `messaging/kafka.adoc` 청크 11개 색인. 같은 질문 재실행 0.0초, LLM·임베딩 호출 없음. 3.5.x는 별도 11개, 버전 섞임 0. `item_id`+`boot_version` 필터 유사도 검색 1위가 `JacksonJsonDeserializer` 청크(Additional Kafka Properties).
   - 질문별 검색어 캐시 전에는 같은 질문 재실행에서 프롬프트1이 다른 검색어를 내 후보 검색·프롬프트2가 다시 호출됐다.
-  - 프롬프트1 검색어가 `kafka json deserializer`처럼 여러 단어 구라 본문에 그대로 나오는 경우가 적고, 후보가 1~2개로 좁다. 대표 질문 2, 3에서 후보가 충분한지 확인 필요.
+  - kafka는 프롬프트1 검색어가 여러 단어 구라 후보가 1~2개였지만, 답 문서가 하나라 문제없었다.
+  - 대표 질문 2·3 (3.5.x/4.0.x): 후보 10개씩. pulsar 3.5.x 선택 `messaging/pulsar`+`web/reactive`, `spring-boot-starter-pulsar-reactive` 청크 1개 / 4.0.x 0개(삭제된 내용, 기대대로). web 두 버전 모두 `features/json`, `how-to/spring-mvc`, `web/servlet` 선택, 3.5.x `com.fasterxml.jackson` 10청크·`tools.jackson` 0, 4.0.x `tools.jackson` 9청크. → 단어 단위 매칭 불필요.
+  - 후보 순위는 출현 횟수라 긴 문서·흔한 단어에 치우친다 (pulsar 3.5.x 1위가 `reactor`가 많은 `how-to/webserver`). 프롬프트2가 걸러 결과에는 영향 없음.
+  - 질문 1회 색인 청크: kafka 11, pulsar 17~52, web 106~110.
+- 답변 생성 (`rag/graph.py`, gpt-5.4-nano, 2026-10-21):
+  - 근거 8건 = Initializr 1 + docs 7. 근거 번호는 모두 범위 안. pulsar 4.0.x 리액티브 스타터는 "문서에서 확인되지 않는다"(지어내지 않음), kafka에 GraphQL 질문도 "확인되지 않는다".
+  - 대표 질문 1(두 물음 결합)의 `KafkaProperties` 패키지: 근거 3·6에 전체 이름이 있는데도 4번 중 1번만 답함. 나머지는 앞 물음 클래스(`JsonDeserializer`)의 패키지로 답함. 프롬프트에 "물음별로 답", "`a.b.Class`의 패키지는 `a.b`" 규칙 추가 후에도 동일.
+  - 같은 물음을 따로 ("KafkaProperties 클래스의 패키지는?"): 4번 중 3번 정답 (3.5.x 1번 "확인되지 않는다").
+- GMS 모델 (2026-10-21): `/models` 목록 조회는 500 에러로 미지원. 직접 호출 성공: gpt-5.4-nano, gpt-5.4-mini, gpt-5.4, gpt-5-mini, gpt-5, gpt-4.1-mini, gpt-4o-mini. 명세 PDF 영문 텍스트에 답변 모델 지정 없음 (한글은 pdftotext로 추출 안 돼 미확인).
+- 모델 비교 (대표 질문 1, 버전별 2회 = 4회, 프롬프트 규칙 추가 후): nano 3/4 평균 5.2초, **mini 4/4 평균 4.3초**, gpt-5.4 4/4 평균 5.9초. mini로 바꾼 뒤 pulsar 4.0.x·GraphQL "확인되지 않는다" 확인도 통과. 표본이 작아 F2015에서 더 넓게 비교.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -84,16 +93,17 @@
 - `include-code::` 예제 코드는 adoc에 없어 색인되지 않는다. F2010(import 예시)에서 필요하면 검토.
 - 크기를 넘는 코드·표 청크(최대 4412자)는 통째로 임베딩된다. 검색 품질은 F2006에서 확인.
 
+### 4.3-1 답변 모델이 복합 질문·전체 이름 해석에 약함 (F2007)
+3절 답변 생성 결과. 검색은 정상이고 생성 단계 문제. 해결: 답변 모델을 `gpt-5.4-mini`로 변경 (사용자 확인, 3절 모델 비교). 대표 질문은 그대로 둔다.
+
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.
 
 ## 5. 다음 작업 (순서대로)
 
-1. 후보 검색 폭 확인: 대표 질문 2(pulsar), 3(web+jackson)으로 `collect` 실행, 후보가 좁으면 검색어를 단어 단위로도 매칭
-2. F2006~F2008 `rag/`: LangGraph retrieve/generate, 근거 병합·중복 제거, 출처 유형 구분
-3. F2009~F2012 `app.py`: 항목+버전 선택, 대화 분리, 진행 상태, 안내 문구
-4. F2010, F2011 `services/`
-5. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
+1. F2009~F2012 `app.py`: 항목+버전 선택, 대화 분리, 진행 상태, 안내 문구. `get_model`의 하드코딩 모델(`gpt-5.4-nano`)을 `rag.collect.chat_model`로 교체
+2. F2010, F2011 `services/`
+3. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약
 - 기획 문서 → 라이브러리 버전·설정 → items 색인 (F2001, F2002)
