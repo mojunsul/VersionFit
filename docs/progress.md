@@ -15,7 +15,7 @@
 | F2007 | LangGraph 답변 생성 | 완료 | `rag/graph.py` `generate`, `answer()`. 아래 4.3 답변 품질 한계 |
 | F2008 | 근거 표시 | 완료 | `app.py` `cited_sources`/`render_sources` (출처 유형 추가) |
 | F2009 | 항목·버전 선택, 대화 분리 | 완료 | `app.py` 사이드바, `session_state.chats[(item_id, version)]`. 항목 선택 key=`item_id` (F2011 카드 이동용) |
-| F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 미착수 | |
+| F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
 | F2011 | 조건 기반 항목 탐색 | 미착수 | 아래 4.1 문제 반영 필요 |
 | F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
@@ -79,6 +79,11 @@
 - GMS 모델 (2026-10-21): `/models` 목록 조회는 500 에러로 미지원. 직접 호출 성공: gpt-5.4-nano, gpt-5.4-mini, gpt-5.4, gpt-5-mini, gpt-5, gpt-4.1-mini, gpt-4o-mini. 명세 PDF 영문 텍스트에 답변 모델 지정 없음 (한글은 pdftotext로 추출 안 돼 미확인).
 - 모델 비교 (대표 질문 1, 버전별 2회 = 4회, 프롬프트 규칙 추가 후): nano 3/4 평균 5.2초, **mini 4/4 평균 4.3초**, gpt-5.4 4/4 평균 5.9초. mini로 바꾼 뒤 pulsar 4.0.x·GraphQL "확인되지 않는다" 확인도 통과. 표본이 작아 F2015에서 더 넓게 비교.
 - 화면 (`app.py`, Streamlit AppTest, 2026-10-21): kafka·4.0.x 선택 → 사이드바 "항목 204건 · 문서 청크 11건", 질문 → 상태 "이미 색인된 문서로 답합니다", 답변에 `JacksonJsonDeserializer`·`kafka.autoconfigure`, 근거 2건 표시. 3.5.x로 바꾸면 대화 0건, 4.0.x로 돌아오면 2건 유지.
+- Initializr 버전 지원 (2026-10-21): `metadata/client`의 bootVersion은 4.2.0-SNAPSHOT/M2, 4.1.2-SNAPSHOT, **4.1.1.RELEASE**, 4.0.9-SNAPSHOT, **4.0.8.RELEASE**뿐. `/dependencies?bootVersion=3.5.0|3.5.7|3.4.0|3.4.5`는 400 "Invalid Spring Boot version". `metadata/client`에 `compatibilityRange` 필드 없음.
+  - `/dependencies?bootVersion=4.0.8.RELEASE` 195건, 4.1.1 183건 (items 204건 중 일부는 버전에 따라 제공 안 됨). kafka → `org.springframework.boot:spring-boot-starter-kafka`, web → `spring-boot-starter-webmvc`.
+  - 4.0.x 문서 원문에는 `spring-boot-starter-kafka`가 0건 (프로젝트 이름 `spring-kafka`만). 문서만으로는 4.x 스타터 좌표를 답할 수 없어 Initializr 좌표를 근거로 추가.
+- 정리 규칙 보완: `javadoc:X[format=annotation]`이 4개 버전 3567건, `[format=full]` 1건 → 표시문이 아니라 옵션이므로 `` `@X` `` / `` `X` ``로. AsciiDoc 따옴표 `"`...`"` 639건 → `"..."` (줄바꿈·중첩 25건 남음). 보완 후 `docs` 컬렉션과 수집 캐시를 지우고 재색인.
+- 가이드 (`services/guide.py`): kafka 4.0.x `spring-boot-starter-kafka` [Initializr 좌표 근거], kafka 3.5.x 좌표 "문서에서 확인되지 않는다"(지어내지 않음), web 4.0.x `spring-boot-starter-webmvc`. AppTest 버튼 → 대화에 가이드·근거 7건.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -97,12 +102,15 @@
 ### 4.3-1 답변 모델이 복합 질문·전체 이름 해석에 약함 (F2007)
 3절 답변 생성 결과. 검색은 정상이고 생성 단계 문제. 해결: 답변 모델을 `gpt-5.4-mini`로 변경 (사용자 확인, 3절 모델 비교). 대표 질문은 그대로 둔다.
 
+### 4.3-2 3.x 의존성 좌표
+Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문서에 적힌 만큼만 나온다 (kafka는 "확인되지 않는다"). 3.x 좌표 공개 API 미확인.
+
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.
 
 ## 5. 다음 작업 (순서대로)
 
-1. F2010, F2011 `services/` (화면에 붙이기 포함)
+1. F2011 `services/explore.py` 조건 기반 항목 탐색 (카드 → 항목 대화 이동, 4.1 문제 반영)
 2. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약

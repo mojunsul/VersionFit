@@ -1,4 +1,4 @@
-"""버전 인지형 Spring Boot 문서 Q&A 화면. (F2008, F2009, F2012)
+"""버전 인지형 Spring Boot 문서 Q&A 화면. (F2008, F2009, F2010, F2012)
 
 실행:
     streamlit run app.py
@@ -19,6 +19,7 @@ from data_prep.boot_docs import VERSIONS, docs_dir
 from data_prep.initializr import load_items
 from rag.collect import collect
 from rag.graph import answer
+from services.guide import guide
 from vector_store.store import get_collection
 
 load_dotenv()
@@ -86,6 +87,7 @@ with st.sidebar:
     version = st.selectbox("Spring Boot 버전", list(VERSIONS), key="version")
     st.caption(f"색인 현황 · 항목 {items_total}건"
                + (f" · 이 항목·버전 문서 청크 {docs_count(item_id, version)}건" if item_id else ""))
+    guide_requested = st.button("📘 버전 맞춤 사용 가이드", width="stretch", disabled=not item_id)
     if st.button("이 대화 지우기", width="stretch", disabled=not item_id):
         chats[(item_id, version)] = []
 
@@ -107,6 +109,8 @@ for message in messages:
             render_sources(message["content"], message.get("sources", []))
 
 question = st.chat_input(f"{item['name']} ({version})에 대해 궁금한 점을 물어보세요")
+if guide_requested:
+    question = "📘 버전 맞춤 사용 가이드 (의존성 선언 · 핵심 설정 · import)"
 
 if question:
     messages.append({"role": "user", "content": question})
@@ -121,19 +125,23 @@ if question:
                     status.update(label=message)
                     status.write(message)
 
-                collected = collect(item, version, question, on_step=step)
-                added = collected["added_chunks"]
-                status.update(label=f"새 문서 청크 {added}건 색인" if added else "이미 색인된 문서로 답합니다",
-                              state="complete")
-            with st.spinner("답변을 만드는 중..."):
-                result = answer(item, version, question)
+                if guide_requested:
+                    result = guide(item, version, on_step=step)  # 수집·좌표·생성까지 한 번에
+                    status.update(label="가이드 준비 완료", state="complete")
+                else:
+                    added = collect(item, version, question, on_step=step)["added_chunks"]
+                    status.update(label=f"새 문서 청크 {added}건 색인" if added else "이미 색인된 문서로 답합니다",
+                                  state="complete")
+            if not guide_requested:
+                with st.spinner("답변을 만드는 중..."):
+                    result = answer(item, version, question)
         except Exception:
             # NF2004: 오류 추적·키·프롬프트는 화면에 내보내지 않는다
             st.error("답변을 만들지 못했습니다. 키와 네트워크를 확인한 뒤 다시 시도해 주세요.")
 
         if result:
             st.markdown(result["answer"])
-            if not any(s["source_type"] != "Initializr 항목 정보" for s in result["sources"]):
+            if not any(s["source_type"].startswith("Spring Boot") for s in result["sources"]):
                 st.info(f"{version} 문서에서 이 질문과 관련된 내용을 찾지 못했습니다. 질문을 바꿔 보세요.")
             render_sources(result["answer"], result["sources"])
             messages.append({"role": "assistant", "content": result["answer"], "sources": result["sources"]})

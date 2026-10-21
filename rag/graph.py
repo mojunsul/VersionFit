@@ -16,6 +16,7 @@ class State(TypedDict, total=False):
     item: dict
     version: str
     question: str
+    extra_sources: list[dict]  # 검색 밖에서 온 근거 (예: 의존성 좌표). 항목 정보 바로 뒤에 붙인다
     sources: list[dict]
     answer: str
 
@@ -31,6 +32,7 @@ def retrieve(state: State) -> State:
                         "text": text, "source_type": "Initializr 항목 정보"})
 
     search, k = CONFIG["search"], CONFIG["search"]["top_k"] - len(sources)
+    sources += state.get("extra_sources", [])
     docs = get_collection("docs")
     where = {"$and": [{"item_id": item["id"]}, {"boot_version": version}]}
     if search["mode"] == "mmr":
@@ -71,9 +73,10 @@ def _build():
 _graph = None
 
 
-def answer(item: dict, version: str, question: str) -> dict:
+def answer(item: dict, version: str, question: str, extra_sources: list[dict] | None = None) -> dict:
     """{"answer": 답변, "sources": 근거 목록}. 근거 번호는 sources 순서(1부터)와 같다."""
     global _graph
     _graph = _graph or _build()
-    out = _graph.invoke({"item": item, "version": version, "question": question})
+    out = _graph.invoke({"item": item, "version": version, "question": question,
+                         "extra_sources": extra_sources or []})
     return {"answer": out["answer"], "sources": out["sources"]}

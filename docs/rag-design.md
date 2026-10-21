@@ -76,6 +76,8 @@
 
 ## 8. 도메인 특화 기능 (F2010): 버전 맞춤 사용 가이드
 
+구현: `services/guide.py`. 고정 질문(`GUIDE_QUESTION`)으로 `collect` → `answer`를 실행하고, Initializr가 지원하는 버전(4.0.x, 4.1.x)은 `/dependencies?bootVersion=` 좌표를 근거로 함께 넣는다. 4.x 문서에는 스타터 좌표(`spring-boot-starter-kafka`)가 없어 문서만으로는 틀린 의존성을 안내하게 되기 때문이다. 3.x는 Initializr가 지원하지 않아(400) 문서 근거만 쓴다.
+
 선택한 항목과 버전에 대해 의존성 선언(Gradle/Maven), 핵심 설정 속성, import 예시를 한 번에 안내한다. 같은 근거 검색을 쓰므로 근거 번호와 링크가 함께 나온다. 이렇게 설계한 이유: 버전마다 달라지는 값을 사용자가 가장 자주 찾는 형태로 묶기 위해서이다.
 
 ## 9. 겪은 문제와 해결 (작성 중)

@@ -1,5 +1,9 @@
-"""Spring Initializr 메타데이터 API에서 항목(의존성) 목록을 받아 items.json으로 저장한다. (F2001)"""
+"""Spring Initializr 메타데이터 API에서 항목(의존성) 목록을 받아 items.json으로 저장한다. (F2001)
+
+버전별 의존성 좌표(groupId, artifactId)도 여기서 받는다. (F2010)
+"""
 import json
+import time
 
 import requests
 
@@ -41,3 +45,28 @@ def item_text(item: dict) -> str:
     return (
         f"이름: {item['name']}\nid: {item['id']}\n분류: {item['group']}\n설명: {item['description']}"
     )
+
+
+def fetch_coordinates(version: str) -> dict | None:
+    """버전 라인(예: 4.0.x)의 최신 RELEASE 기준 의존성 좌표. Initializr가 그 라인을 지원하지 않으면 None.
+
+    결과(지원하지 않는다는 사실 포함)는 `paths.coordinates_dir`에 캐시한다.
+    """
+    path = ROOT / CONFIG["paths"]["coordinates_dir"] / f"{version}.json"
+    if not path.exists():
+        resp = requests.get(URL, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        line = version.removesuffix("x")  # "4.0.x" -> "4.0."
+        releases = [v["id"] for v in resp.json()["bootVersion"]["values"]
+                    if v["id"].startswith(line) and v["id"].endswith(".RELEASE")]
+        data = {"boot_version": None, "dependencies": {}}
+        if releases:
+            time.sleep(1.1)  # NF2006
+            resp = requests.get("https://start.spring.io/dependencies", params={"bootVersion": releases[0]},
+                                headers=HEADERS, timeout=30)
+            resp.raise_for_status()
+            data = {"boot_version": releases[0], "dependencies": resp.json()["dependencies"]}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if data["boot_version"] else None
