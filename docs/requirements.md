@@ -17,7 +17,7 @@
 
 | 출처 | 용도 | 이용 조건 | 비고 |
 |---|---|---|---|
-| start.spring.io 메타데이터 API | 항목 메타데이터 | 이용 약관 미확인 (기록 필요) | 호출 1회, 결과를 로컬에 저장 |
+| start.spring.io 메타데이터 API | 항목 메타데이터 | 서비스 소스가 Apache-2.0 공개 저장소(spring-io/start.spring.io). 별도 API 이용 약관과 robots.txt는 없음(404), 2026-10-21 확인 | 호출 1회, 결과를 로컬에 저장 |
 | github.com/spring-projects/spring-boot | 외부 문서 (Boot 레퍼런스 AsciiDoc) | Apache-2.0 (GitHub API로 확인) | 브랜치 4.1.x, 4.0.x, 3.5.x, 3.4.x |
 | GitHub REST API | 문서 파일 목록(후보) 조회 | GitHub API 약관, 인증 없이 시간당 60회 | 식별용 User-Agent 포함, 호출 간격 1초 이상 |
 | docs.spring.io | 원문 링크 표시용 (본문 수집은 하지 않음) | robots.txt: crawl-delay 1 | |
@@ -28,9 +28,15 @@
 
 ### 1.3 근거가 필요한 질문 (예시)
 
-1. "Spring Boot 4.0에서 Jackson 설정은 3.x와 어떻게 달라졌나?"
-2. "Kafka를 쓰려면 3.5와 4.0에서 각각 어떤 의존성과 설정이 필요한가?"
-3. "Actuator 엔드포인트 노출 설정의 기본값이 버전에 따라 다른가?"
+항목과 버전을 고른 상태에서 물을 수 있고, 3.5.x와 4.0.x 문서의 실제 차이(2026-10-21 문서 비교)로 답이 갈리는 질문이다.
+
+| # | 항목 | 질문 | 문서에서 확인한 차이 |
+|---|---|---|---|
+| 1 | Spring for Apache Kafka | "JSON 값 역직렬화 설정에는 어떤 클래스를 쓰나? KafkaProperties의 패키지는?" | 3.5: `JsonDeserializer`, `org.springframework.boot.autoconfigure.kafka` / 4.0: `JacksonJsonDeserializer`, `org.springframework.boot.kafka.autoconfigure` |
+| 2 | Spring for Apache Pulsar | "리액티브 Pulsar 스타터를 쓸 수 있나?" | 3.5: `spring-boot-starter-pulsar-reactive` 문서 있음 / 4.0: 리액티브 섹션과 스타터 설명이 문서에서 사라짐 |
+| 3 | Spring Web | "JSON 직렬화(Jackson)를 설정할 때 쓰는 패키지는?" | 3.5: `com.fasterxml` / 4.0: `tools.jackson` (`features/json`) |
+
+위 차이는 문서 원문을 비교해 확인했지만, 답변이 실제로 이 차이를 정확히 짚는지는 구현 후 검증한다.
 
 ## 2. 기능 요구사항
 
@@ -42,7 +48,7 @@
 | F2002 | 색인 | 메타데이터 색인(RAG 1) | `items` 컬렉션에 항목당 1청크, 청크 ID = 항목 id (재색인 시 덮어쓰기), 색인 건수 화면 표시 | 필수 |
 | F2003 | 프롬프트 | 검색어 추출(프롬프트1) | 항목·질문에서 문서 검색어를 JSON 배열로 추출, 항목 자체 문서는 항상 대상 | 필수 |
 | F2004 | 수집 | 외부 문서 수집(프롬프트2) | 선택한 버전 브랜치의 문서 파일 목록에서 검색어와 맞는 후보를 모아 선별 프롬프트로 고르고, 본문과 원문 URL 수집. 항목 자체 문서는 항상 포함. 이미 수집한 검색어는 재수집하지 않음 | 필수 |
-| F2005 | 색인 | 외부 문서 색인(RAG 2) | 청크 크기·중복은 `config.yaml`. `docs` 컬렉션에 저장, 청크 ID = `항목ID:버전:문서ID:순번` | 필수 |
+| F2005 | 색인 | 외부 문서 색인(RAG 2) | 청크 크기·중복은 `config.toml`. `docs` 컬렉션에 저장, 청크 ID = `항목ID:버전:문서ID:순번` | 필수 |
 | F2006 | 검색 | 근거 검색 및 병합 | 선택 항목의 메타데이터 청크는 항상 포함, 문서 청크는 항목·버전으로 필터링해 유사도 검색, 병합 후 중복 제거, Top-k는 설정 | 필수 |
 | F2007 | 생성 | 근거 기반 답변(프롬프트3) | LangGraph retrieve/generate 두 노드, 근거에 출처 유형(항목 메타데이터/Boot 문서) 구분, 근거 없으면 "확인되지 않는다" | 필수 |
 | F2008 | 생성 | 근거 표시 | 본문의 `[근거 N]` 중 실제 인용된 것만 제목·원문 링크와 함께 표시, 인용 없으면 안내 | 필수 |
