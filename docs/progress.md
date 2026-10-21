@@ -7,7 +7,7 @@
 | 번호 | 내용 | 상태 | 위치 / 메모 |
 |---|---|---|---|
 | F2001 | 항목 메타데이터 적재 | 완료 | `data_prep/initializr.py` → `data/items.json` (204건) |
-| F2002 | 메타데이터 색인 | 완료 | `build_items.py`, 두 번 실행해도 204건 유지 확인 |
+| F2002 | 메타데이터 색인 | 완료 | `scripts/build_items.py`, 두 번 실행해도 204건 유지 확인 |
 | F2003 | 검색어 추출(프롬프트1) | 미착수 | 다음 작업 |
 | F2004 | 외부 문서 수집(프롬프트2) | 미착수 | 다음 작업 |
 | F2005 | 외부 문서 색인 | 미착수 | 다음 작업 |
@@ -48,12 +48,17 @@
   - 3.2.x~3.5.x: `spring-boot-project/spring-boot-docs/src/docs/antora/modules/reference/pages`
   - 3.1.x 이하: `spring-boot-project/spring-boot-docs/src/docs/asciidoc` (미지원)
   - reference 모듈 파일 수: 4.1.x 89개, 4.0.x 85개, 3.5.x 83개, 3.4.x 83개 (각 약 0.8~0.9MB)
-  - **미확인**: `how-to` 등 reference 외 모듈(`modules/how-to/pages`)의 경로와 포함 여부. batch처럼 how-to를 가리키는 항목이 있으므로 확인 필요.
+  - 모듈은 위 경로의 `.../antora/modules/{모듈}/pages`로, 4개 버전 모두 같은 기본 경로 아래에 있다. how-to 28개, specification 11개, appendix 8개, ROOT 7개 (버전 공통). actuator API 문서(`api`)와 빌드 플러그인 문서는 다른 경로에 있다.
+  - Initializr 링크 73건(고유 31개)의 모듈 분포: reference 66, how-to 6(`batch`, `data-access`, `data-initialization`), specification 1(`configuration-metadata/annotation-processor`). 31개 모두 4개 버전에서 `{모듈}/pages/{경로}.adoc`로 존재 → 수집 대상 모듈: reference, how-to, specification.
 - 목록: `GET https://api.github.com/repos/spring-projects/spring-boot/git/trees/{branch}?recursive=1` (truncated 아님). 본문: `https://raw.githubusercontent.com/spring-projects/spring-boot/{branch}/{path}`.
 - GitHub API 인증 없이 시간당 60회 (IP 공유). Trees는 버전당 1회면 충분, 본문은 raw로 받는다.
-- 원문 링크: `https://docs.spring.io/spring-boot/{major.minor}/reference/<page>.html` — 4.0, 3.5는 200, 4.1은 302(최신으로 리다이렉트). `x.y.z`는 301. docs.spring.io robots.txt: crawl-delay 1.
+- 원문 링크: `https://docs.spring.io/spring-boot/{major.minor}/{모듈}/<page>.html` — 4.0, 3.5, 3.4는 200, 4.1은 302(최신으로 리다이렉트). how-to(3.4/3.5/4.0), specification(4.0)도 같은 규칙으로 200 확인. `x.y.z`는 301. docs.spring.io robots.txt: crawl-delay 1.
 - 라이선스: spring-boot, start.spring.io 저장소 모두 Apache-2.0. start.spring.io에 별도 API 약관·robots.txt 없음(404).
 - AsciiDoc에 `[[anchor]]`, `:attr:` 줄, `include::`, `javadoc:...[]` 매크로, `----` 코드 블록이 있다. 코드 블록 안의 `=` 줄은 헤더가 아니다.
+  - 실제 본문 확인 (kafka 3.5/4.0, how-to/batch 4.0, features/json 3.5): `:attr:` 줄과 `include::`는 0건. 많은 순서: `javadoc:패키지.클래스[]`(23~33건), `[[anchor]]`(6건), `xref:[모듈:]경로.adoc#앵커[표시문]`(표시문이 빈 경우 있음), `configprop:spring.kafka...[]`, `[configprops,yaml]` 코드 블록 표시, `include-code::MyBean[]`.
+  - **`javadoc:`는 패키지 전체 이름을 남겨야 한다.** 대표 질문 1의 답(`KafkaProperties` 패키지)이 `javadoc:org.springframework.boot.kafka.autoconfigure.KafkaProperties[]` 안에만 있다.
+  - `include-code::`는 Java 예제를 별도 소스 파일에서 끼워 넣는다. adoc만 받으면 예제 코드가 빠진다 (kafka 5건, json 2건).
+- Trees 경로 매칭 (4.0.x, 3개 모듈 127개 문서): `kafka`, `json`, `pulsar`, `security`, `messaging`은 경로에 걸린다. `jackson`, `deserializer`, `serialization`, `jpa`, `datasource`, `login`은 0건 → 경로만으로는 개념 검색어 후보가 안 나온다.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -62,13 +67,16 @@
 항목 설명이 영어라 "메시징 큐에 쓸 수 있는 의존성"은 상위 30위 안에 Kafka/RabbitMQ가 없다. "message queue"는 RabbitMQ 1위. "데이터베이스에 접근하는 JPA", "보안 로그인 인증"은 정상.
 대응 계획(미검증): 조건을 LLM으로 영어 검색어로 바꿔 검색 → 후보 30개 → LLM이 조건에 맞는 항목만 선별.
 
-### 4.2 공유 문서 중복
+### 4.2 경로 매칭만으로는 후보가 부족함 (F2004)
+3절 Trees 경로 매칭 결과. 대표 질문 3("Jackson 패키지")의 `jackson`은 `features/json.adoc` 경로에 걸리지 않는다. 후보 수집 방식 결정 필요.
+
+### 4.3 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.
 
 ## 5. 다음 작업 (순서대로)
 
 1. F2003~F2005 외부 문서 파이프라인 (`data_prep/boot_docs.py`, `vector_store/`, 색인 스크립트)
-   - 버전별 경로 표를 `data_prep`에 두고, how-to 모듈 포함 여부부터 확인
+   - 버전별 경로 표를 `data_prep`에 둔다 (기본 경로 2종 × 모듈 reference/how-to/specification, 3절 확인 완료)
    - 프롬프트1: 항목·질문 → 검색어 JSON 배열 (항목 이름 항상 포함)
    - 캐시: (item_id, boot_version, query) 수집 이력 저장 → 재수집 방지
    - 후보: Trees 목록에서 검색어 매칭 → 프롬프트2(제목·경로만 보여주고 선택) → 항목 `doc_url` 문서는 항상 포함

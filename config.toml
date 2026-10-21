@@ -16,3 +16,4 @@ fetch_k = 30          # mmr일 때 먼저 가져올 후보 수
 [paths]
 chroma_dir = "chroma_db"
 items_json = "data/items.json"
+boot_docs_dir = "data/boot_docs"
