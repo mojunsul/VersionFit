@@ -1,6 +1,6 @@
 """항목 메타데이터를 items 컬렉션에 색인한다. (F2001, F2002)
 
-실행: python build_items.py
+실행: python -m scripts.build_items
 청크 ID가 항목 id라서 다시 실행해도 덮어쓰기만 일어난다.
 """
 from datetime import date

@@ -15,20 +15,24 @@
 - 임베딩 모델을 바꾸면 `chroma_db/`를 지우고 전체 재색인한다.
 
 # 구조 (NF2005 모듈 분리)
+의존 방향: `app.py → services → rag → data_prep, vector_store`. 반대 방향 import 금지. 파일은 필요해질 때 만든다.
+
 | 경로 | 책임 |
 |---|---|
-| `data_prep/` | 도메인에 묶인 코드 전부 (Initializr 파싱, spring-boot 문서 경로, 문서 수집) |
-| `vector_store/` | Chroma 컬렉션(`items`, `docs`), 청킹, 색인 |
-| `rag/` (예정) | LangGraph `retrieve`/`generate` 두 노드, 프롬프트 3개 |
-| `services/` (예정) | 특화 기능(버전 맞춤 사용 가이드), 조건 기반 항목 탐색 |
-| `app.py` | Streamlit UI. 기존 골격을 이어 쓴다 (`get_model`, `cited_sources`, `render_sources` 재사용). 아직 영화 예시 상태 |
-| `build_items.py` | items 색인 스크립트 |
-| `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 |
+| `app.py` | Streamlit 진입점. 기존 골격을 이어 쓴다 (`get_model`, `cited_sources`, `render_sources` 재사용). 아직 영화 예시 상태 |
+| `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 (루트 기준 경로 계산 때문에 루트에 둔다) |
+| `scripts/` | 배치 스크립트. 루트에서 `python -m scripts.<이름>`으로 실행. `build_items`(items 색인), `fetch_docs`(문서 원문 수집) |
+| `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색) |
+| `vector_store/` | Chroma와 청킹. 도메인 모름. `store.py`(컬렉션), `chunking.py`(예정) |
+| `rag/` (예정) | LLM 흐름. `prompts.py`(프롬프트 3개), `collect.py`(질문 시점 수집 F2003~F2005), `graph.py`(LangGraph retrieve/generate) |
+| `services/` (예정) | `guide.py`(버전 맞춤 사용 가이드 F2010), `explore.py`(조건 기반 항목 탐색 F2011) |
+| `data/` | `items.json`(커밋), `boot_docs/`(원문 사본, gitignore) |
 
 # 실행 (Windows, Git Bash 기준)
 ```
 python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
-.venv/Scripts/python build_items.py      # 기대 출력: 로드한 항목 204건, 색인된 청크 204건
+.venv/Scripts/python -m scripts.build_items   # 기대 출력: 로드한 항목 204건, 색인된 청크 204건
+.venv/Scripts/python -m scripts.fetch_docs    # 첫 실행 약 10분. 기대 출력: 버전별 보관 문서 약 127건
 .venv/Scripts/streamlit run app.py
 ```
 
