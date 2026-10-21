@@ -20,7 +20,8 @@
 | F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
-| F2013, F2016 | 심화 | 보류 | |
+| F2016 | 심화: 여러 문서 출처 결합 | 일부 | springdoc-openapi 문서 추가 (`data_prep/external_docs.py`). 다른 외부 문서는 미착수 |
+| F2013 | 심화: HTML 프론트 | 예정 | 2절 UI 결정 |
 
 1일차 마감(도메인 확정, 16시)용 요구사항 정의서는 작성 완료. RAG 설계문서는 초안이며 구현하면서 채운다 (값 변경 비교, 겪은 문제).
 
@@ -38,7 +39,7 @@
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
 | UI: 현재 Streamlit `app.py`. F2011 로직 다음에 HTML·CSS·JS 프론트로 전환 예정 (사용자 요청, 2026-10-21) | 로직(`rag/`, `services/`)은 UI와 분리돼 있어 `app.py`만 다시 만들면 된다. 미결: 백엔드 API 방식(FastAPI는 필수 라이브러리 목록 밖 / 표준 `http.server`), Streamlit 유지 여부(명세 F2013 문구 확인 필요) |
 | Vector DB: ChromaDB, 컬렉션 `items`/`docs` | 명세 필수 라이브러리 |
-| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
+| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` (**개발 중 임시로 `gpt-5.4-nano`**, 완성본에서 mini로 되돌림. 사용자 요청 2026-10-21) | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
 | 설정 파일: `config.toml` (tomllib) | 의존성 추가 없이 읽음 |
 | 위험 도메인 아님, 면책 문구 없음 | |
 
@@ -85,6 +86,12 @@
 - 정리 규칙 보완: `javadoc:X[format=annotation]`이 4개 버전 3567건, `[format=full]` 1건 → 표시문이 아니라 옵션이므로 `` `@X` `` / `` `X` ``로. AsciiDoc 따옴표 `"`...`"` 639건 → `"..."` (줄바꿈·중첩 25건 남음). 보완 후 `docs` 컬렉션과 수집 캐시를 지우고 재색인.
 - 가이드 (`services/guide.py`): kafka 4.0.x `spring-boot-starter-kafka` [Initializr 좌표 근거], kafka 3.5.x 좌표 "문서에서 확인되지 않는다"(지어내지 않음), web 4.0.x `spring-boot-starter-webmvc`. AppTest 버튼 → 대화에 가이드·근거 7건.
 - 탐색 화면 (AppTest, 2026-10-21): "메시징 큐에 쓸 수 있는 의존성" → 카드 8개(rabbitmq, kafka, ...), kafka 카드 버튼 → 사이드바 선택 kafka, 제목 Kafka로 이동, 카드 유지. 무관 조건 → 안내 문구. 폼 key와 결과 session key가 같으면(`explore`) Streamlit 예외 → 결과 key를 `explore_result`로 분리.
+- springdoc-openapi 문서 (2026-10-21): 원본 `springdoc/springdoc.github.io` (Apache-2.0, 브랜치 master만), springdoc.org robots.txt `Allow: /`.
+  - `src/docs/asciidoc/*.adoc` = springdoc 3.x (springdoc.org/), `src/docs/asciidoc/v2/*.adoc` = 2.x (springdoc.org/v2/, 제목 "for Spring Boot 3"), `v1/` = Boot 2용. `index.adoc`이 본문 파일을 include로 묶는다.
+  - 호환표(v2 문서 FAQ 13.80): Boot 4.x ↔ 3.x, 3.5.x ↔ 2.8.x, 3.4.x ↔ 2.7.x~2.8.x. 그래서 Boot 4.0/4.1은 3.x판, 3.4/3.5는 2.x판을 쓴다.
+  - `{springdoc-version}`(3.1.1), `{springdoc-version2}`(2.9.1)은 `_attributes.adoc`이 아니라 `pom.xml`의 asciidoctor 속성. v2 문서는 `{springdoc-version2}`를 쓴다. pom의 일반 속성(version 0.0.5 등)은 쓰면 안 됨.
+  - 수집 결과: 3.x판 16개, 2.x판 15개 (`_` 조각·index 제외). nano로 "Swagger UI 경로" 질문: 4.1.x → `springdoc.swagger-ui.path` [3.x 문서, springdoc.org/], 3.5.x → 같은 속성 [2.x 문서, /v2/], 판 섞임 없음. 4.1.x 가이드에 설정 속성이 근거와 함께 나옴 (이전엔 "확인되지 않는다"). kafka 4.0.x 회귀 정상.
+  - 4.1.x 가이드에 Initializr 좌표(3.1.0)와 문서 예시(3.1.1)가 함께 나옴. nano라 형식이 어수선함.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -111,7 +118,7 @@ Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문�
 
 ### 4.3-3 Spring Boot 문서 밖 항목 (2026-10-21 확인)
 items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113(그중 docs.spring.io의 다른 Spring 프로젝트 79, techdocs.broadcom.com 8 등), 링크 없음 18. 4.1.x 문서에 id·이름 문자열이 안 나오는 항목 최대 106 (단순 문자열 비교라 과대 추정). 예: springdoc-openapi(springdoc.org)는 가이드에서 좌표만 나오고 설정·import는 "확인되지 않는다".
-대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`app.py` `no_docs_notice`). 외부 문서 수집은 심화 F2016 (docs.spring.io 79건부터) — 결정 필요.
+대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`app.py` `no_docs_notice`). springdoc-openapi는 외부 문서 수집 추가 (3절). 나머지(docs.spring.io 79건 등)는 `external_docs.SOURCES`에 출처를 추가하는 방식으로 확장 가능 — 결정 필요.
 
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.

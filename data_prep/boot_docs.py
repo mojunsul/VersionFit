@@ -26,7 +26,7 @@ INTERVAL = 1.1  # NF2006: 호출 간격 1초 이상
 _last_call = 0.0
 
 
-def _get(url: str, **headers) -> requests.Response:
+def http_get(url: str, **headers) -> requests.Response:
     global _last_call
     for attempt in range(3):
         time.sleep(max(0.0, _last_call + INTERVAL - time.monotonic()))
@@ -52,7 +52,7 @@ def docs_dir(version: str) -> Path:
 def download(version: str) -> int:
     """버전의 문서 목록을 Trees API로 받고, 아직 없는 파일만 raw로 받는다. 받은 파일 수를 돌려준다."""
     base = VERSIONS[version]
-    tree = _get(f"https://api.github.com/repos/{REPO}/git/trees/{version}?recursive=1",
+    tree = http_get(f"https://api.github.com/repos/{REPO}/git/trees/{version}?recursive=1",
                 Accept="application/vnd.github+json").json()
     doc_ids = [t["path"][len(base) + 1:] for t in tree["tree"]
                if t["path"].startswith(base + "/") and t["path"].endswith(".adoc")]
@@ -62,7 +62,7 @@ def download(version: str) -> int:
         path = docs_dir(version) / doc_id
         if path.exists():
             continue
-        text = _get(f"https://raw.githubusercontent.com/{REPO}/{version}/{base}/{doc_id}").text
+        text = http_get(f"https://raw.githubusercontent.com/{REPO}/{version}/{base}/{doc_id}").text
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         fetched += 1

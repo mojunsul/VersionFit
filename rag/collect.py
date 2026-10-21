@@ -13,6 +13,7 @@ from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 
 from config import CONFIG, ROOT
+from data_prep import external_docs
 from data_prep.boot_docs import doc_id_for_item, doc_title, load_docs, repo_url, search, source_url
 from rag.prompts import SEARCH_TERMS, SELECT_DOCS
 from vector_store.chunking import chunk
@@ -98,6 +99,7 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     docs = load_docs(version)
     if not docs:
         raise RuntimeError(f"{version} 원문 사본이 없습니다. python -m scripts.fetch_docs 를 먼저 실행하세요.")
+    docs |= external_docs.load(item["id"], version)  # 항목에 외부 문서 출처가 있으면 함께 후보로 검색
     on_step("후보 문서를 찾는 중")
     candidates = search(docs, new_terms, CONFIG["collect"]["candidates"])
     selected = select_docs(item, version, question, candidates, docs, llm) if candidates else []
@@ -112,12 +114,13 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
             continue
         title = doc_title(docs[doc_id])
         on_step(f"색인하는 중: {title}")
-        meta = {
-            "item_id": item["id"], "boot_version": version, "doc_title": title, "doc_id": doc_id,
-            "source_url": source_url(version, doc_id), "repo_url": repo_url(version, doc_id),
-            "query": ", ".join(new_terms), "license": "Apache-2.0", "source_type": "boot-reference",
-            "collected_at": date.today().isoformat(),
-        }
+        if ":" in doc_id:  # 외부 문서 (출처:경로)
+            origin = external_docs.describe(doc_id, version)
+        else:
+            origin = {"source_url": source_url(version, doc_id), "repo_url": repo_url(version, doc_id),
+                      "source_type": "boot-reference", "license": "Apache-2.0"}
+        meta = {"item_id": item["id"], "boot_version": version, "doc_title": title, "doc_id": doc_id,
+                "query": ", ".join(new_terms), "collected_at": date.today().isoformat(), **origin}
         chunks = chunk(docs[doc_id])
         col.add_documents([Document(page_content=c, metadata=meta) for c in chunks],
                           ids=[f"{item['id']}:{version}:{doc_id}:{i}" for i in range(len(chunks))])

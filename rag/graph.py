@@ -21,6 +21,11 @@ class State(TypedDict, total=False):
     answer: str
 
 
+def label(source_type: str, version: str) -> str:
+    """근거 출처 유형 표시 이름. Boot 문서는 코드값으로 저장돼 있고, 외부 문서는 표시 이름 그대로 저장된다."""
+    return f"Spring Boot {version} 문서" if source_type == "boot-reference" else source_type
+
+
 def retrieve(state: State) -> State:
     """선택 항목의 items 청크는 검색 없이 항상 넣고, docs는 항목·버전으로 거른 뒤 질문과 비슷한 청크를 붙인다."""
     item, version = state["item"], state["version"]
@@ -48,7 +53,7 @@ def retrieve(state: State) -> State:
         seen.add(key)
         section = d.page_content.split("\n", 1)[0]
         sources.append({"title": section or d.metadata["doc_title"], "url": d.metadata["source_url"],
-                        "text": d.page_content, "source_type": f"Spring Boot {version} 문서"})
+                        "text": d.page_content, "source_type": label(d.metadata["source_type"], version)})
     return {"sources": sources}
 
 

@@ -25,5 +25,6 @@ max_items = 8        # LLM이 고를 최대 항목 수
 chroma_dir = "chroma_db"
 items_json = "data/items.json"
 boot_docs_dir = "data/boot_docs"
+external_docs_dir = "data/external_docs"
 collect_log = "data/collect_log.json"
 coordinates_dir = "data/coordinates"

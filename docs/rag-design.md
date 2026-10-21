@@ -47,6 +47,8 @@
 
 사전 색인으로 대표 항목을 미리 채워 둘 수 있고, 같은 코드가 질문 시점에도 동작한다.
 
+**외부 문서 출처 (`data_prep/external_docs.py`)**: 항목 id가 `SOURCES`에 있으면 그 문서도 후보 검색에 넣는다. 지금은 springdoc-openapi. Boot 버전마다 호환되는 판을 쓴다 (4.x → springdoc 3.x 문서, 3.4~3.5 → 2.x 문서). doc_id는 `출처:경로`(예: `springdoc-openapi:v2/features.adoc`), 청크 메타데이터 `source_type`은 표시 이름("springdoc-openapi 2.x 문서"), `source_url`은 판별 원문 링크.
+
 ## 4. 검색과 병합 (F2006, F2014)
 
 1. 선택 항목의 `items` 청크를 검색 없이 항상 포함.
@@ -86,3 +88,4 @@
 - 버전마다 문서 위치가 다르다 (4.x는 `documentation/...`, 3.2~3.5는 `spring-boot-project/...`). 버전별 경로를 `data_prep` 설정으로 둔다.
 - 파일 경로만으로 후보를 찾으면 개념 검색어가 빠진다 (`jackson`, `jpa`, `datasource` 경로 일치 0건, 대표 질문 3의 `features/json.adoc` 누락). 원문을 미리 받아 두고 본문까지 검색하도록 바꿨다.
 - `javadoc:` 매크로를 클래스 이름만 남기면 버전별 패키지 이동(대표 질문 1)이 사라진다. 패키지 전체 이름을 남긴다.
+- items 204건 중 Spring Boot 문서로 설명되는 항목은 73건뿐이다. SpringDoc처럼 외부 문서 항목은 근거가 Initializr 정보뿐이라, 외부 문서를 두 번째 출처로 추가했다. 외부 문서도 버전이 있어(springdoc 2.x/3.x) Boot 버전에 맞는 판을 고른다.

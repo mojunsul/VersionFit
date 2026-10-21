@@ -178,7 +178,7 @@ if question:
 
         if result:
             st.markdown(result["answer"])
-            if not any(s["source_type"].startswith("Spring Boot") for s in result["sources"]):
+            if all(s["source_type"].startswith("Initializr") for s in result["sources"]):
                 st.info(no_docs_notice(item, version, retry_hint=not guide_requested))
             render_sources(result["answer"], result["sources"])
             messages.append({"role": "assistant", "content": result["answer"], "sources": result["sources"]})
