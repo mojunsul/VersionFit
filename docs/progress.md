@@ -13,15 +13,15 @@
 | F2005 | 외부 문서 색인 | 완료 | `vector_store/chunking.py`, `rag/collect.py` `collect()` |
 | F2006 | 근거 검색·병합 | 완료 | `rag/graph.py` `retrieve` (items 항목 청크 항상 + docs 항목·버전 필터 검색, 중복 제거) |
 | F2007 | LangGraph 답변 생성 | 완료 | `rag/graph.py` `generate`, `answer()`. 아래 4.3 답변 품질 한계 |
-| F2008 | 근거 표시 | 완료 | `app.py` `cited_sources`/`render_sources` (출처 유형 추가) |
-| F2009 | 항목·버전 선택, 대화 분리 | 완료 | `app.py` 사이드바, `session_state.chats[(item_id, version)]`. 항목 선택 key=`item_id` (F2011 카드 이동용) |
+| F2008 | 근거 표시 | 완료 | `web/app.js` `citedSources`/`renderSources` |
+| F2009 | 항목·버전 선택, 대화 분리 | 완료 | `web/` 사이드바, localStorage `chat:{항목}|{버전}` |
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
-| F2011 | 조건 기반 항목 탐색 | 완료 | `services/explore.py`, `app.py` 탐색 영역(2열 카드, 버튼 → `item_id` 변경으로 해당 항목 대화 이동) |
-| F2012 | 진행 상태·안내 | 완료 | `st.status` + `collect(on_step=)`, 키 누락·items 0건·원문 없음·문서 근거 없음·오류(추적 미표시) 안내 |
+| F2011 | 조건 기반 항목 탐색 | 완료 | `services/explore.py`, `POST /api/explore`, `web/` 카드 → 해당 항목 대화 이동 |
+| F2012 | 진행 상태·안내 | 완료 | `collect(on_step=)` → `server.py` SSE `step` → 화면 진행 박스. 키 누락·items 0건·원문 없음·문서 근거 없음(`no_docs_notice`)·오류 안내 |
 | F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
 | F2016 | 심화: 여러 문서 출처 결합 | 일부 | springdoc-openapi 문서 추가 (`data_prep/external_docs.py`). 다른 외부 문서는 미착수 |
-| F2013 | 심화: HTML 프론트 | 예정 | 2절 UI 결정 |
+| F2013 | 심화: HTML 프론트 | 완료 | `server.py` + `web/` (Streamlit `app.py` 삭제) |
 
 1일차 마감(도메인 확정, 16시)용 요구사항 정의서는 작성 완료. RAG 설계문서는 초안이며 구현하면서 채운다 (값 변경 비교, 겪은 문제).
 
@@ -37,7 +37,7 @@
 | 수집 캐시: `data/collect_log.json`에 `(항목, 버전, 검색어)` → 선택 문서, `(항목, 버전, 질문)` → 검색어. 문서 중복은 Chroma 메타데이터로 확인 | 새 문서를 못 만든 검색어도 기록해야 함. 프롬프트1은 같은 질문에도 다른 검색어를 내서 질문별 검색어도 캐시 (3절) |
 | 청킹 직접 구현 (헤더 경로 접두, 문단·구분자 블록 단위) | langchain-text-splitters에 AsciiDoc 헤더 분할기가 없고, 글자 수 분할기는 코드 블록을 자른다 |
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
-| UI: 현재 Streamlit `app.py`. F2011 로직 다음에 HTML·CSS·JS 프론트로 전환 예정 (사용자 요청, 2026-10-21) | 로직(`rag/`, `services/`)은 UI와 분리돼 있어 `app.py`만 다시 만들면 된다. 미결: 백엔드 API 방식(FastAPI는 필수 라이브러리 목록 밖 / 표준 `http.server`), Streamlit 유지 여부(명세 F2013 문구 확인 필요) |
+| UI: FastAPI(`server.py`) + HTML·CSS·JS(`web/`). Streamlit `app.py` 삭제, `requirements.txt`의 streamlit 줄은 명세 필수 목록이라 남김 (사용자 결정 2026-10-21) | 로직(`rag/`, `services/`)은 UI와 분리돼 있어 화면만 교체. fastapi==0.156.8 추가(명세 목록 밖), uvicorn==0.54.0. 기본 127.0.0.1이라 네트워크에 노출 안 됨 |
 | Vector DB: ChromaDB, 컬렉션 `items`/`docs` | 명세 필수 라이브러리 |
 | 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` (**개발 중 임시로 `gpt-5.4-nano`**, 완성본에서 mini로 되돌림. 사용자 요청 2026-10-21) | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
 | 설정 파일: `config.toml` (tomllib) | 의존성 추가 없이 읽음 |
@@ -92,6 +92,7 @@
   - `{springdoc-version}`(3.1.1), `{springdoc-version2}`(2.9.1)은 `_attributes.adoc`이 아니라 `pom.xml`의 asciidoctor 속성. v2 문서는 `{springdoc-version2}`를 쓴다. pom의 일반 속성(version 0.0.5 등)은 쓰면 안 됨.
   - 수집 결과: 3.x판 16개, 2.x판 15개 (`_` 조각·index 제외). nano로 "Swagger UI 경로" 질문: 4.1.x → `springdoc.swagger-ui.path` [3.x 문서, springdoc.org/], 3.5.x → 같은 속성 [2.x 문서, /v2/], 판 섞임 없음. 4.1.x 가이드에 설정 속성이 근거와 함께 나옴 (이전엔 "확인되지 않는다"). kafka 4.0.x 회귀 정상.
   - 4.1.x 가이드에 Initializr 좌표(3.1.0)와 문서 예시(3.1.1)가 함께 나옴. nano라 형식이 어수선함.
+- 웹 서버 (FastAPI TestClient + uvicorn, 2026-10-21): status·items(204)·docs-count 정상, 잘못된 항목 404·버전 400·빈 질문 422. `/api/ask` 이벤트 step×4 → result, kafka 4.0.x `JacksonJsonDeserializer`. springdoc 4.1.x 가이드 출처에 3.x 문서 포함, htmx 가이드는 외부 문서 안내. uvicorn 실측: step이 0.5→1.8→2.9초에 하나씩 도착, result 6.0초 (버퍼링 없음). 브라우저 클릭 동작은 사용자 확인 필요.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -125,7 +126,7 @@ items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113
 
 ## 5. 다음 작업 (순서대로)
 
-1. HTML·CSS·JS 프론트 전환: 백엔드 API 방식과 Streamlit 유지 여부 결정 → 화면 기능(F2008~F2012) 이식
+1. 브라우저에서 화면 동작 확인 (사용자)
 2. 심화 F2014, F2015 → 검증(명세 4장) → 설계문서·README 보완
 
 ## 6. 커밋 이력 요약

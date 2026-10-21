@@ -13,3 +13,7 @@ streamlit==1.62.0
 requests==2.34.2
 python-dotenv==1.2.3
 typing-extensions==4.16.0
+
+# 웹 서버 (명세 목록 외 추가: Streamlit 화면을 HTML·CSS·JS + FastAPI로 교체, streamlit은 명세 목록이라 남겨 둠)
+fastapi==0.156.8
+uvicorn==0.54.0

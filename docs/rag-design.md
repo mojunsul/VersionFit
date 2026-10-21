@@ -13,10 +13,10 @@
                                         |
                               [services]  특화 기능 / 조건 탐색
                                         |
-                                  [app.py Streamlit]
+                       [server.py FastAPI (SSE)]  ←  [web/ HTML·CSS·JS]
 ```
 
-의존은 위에서 아래로만 흐른다 (`app.py → services → rag → data_prep, vector_store`). 도메인에 묶인 코드(Initializr 파싱, spring-boot 문서 경로)는 `data_prep`에만 두고, `vector_store`는 도메인을 모른다.
+의존은 위에서 아래로만 흐른다 (`server.py → services → rag → data_prep, vector_store`). 도메인에 묶인 코드(Initializr 파싱, spring-boot 문서 경로)는 `data_prep`에만 두고, `vector_store`는 도메인을 모른다.
 
 ## 2. 컬렉션과 메타데이터
 
@@ -74,7 +74,7 @@
 
 ## 7. 근거 표시 (F2008)
 
-답변의 `[근거 N]` 표기를 파싱해 실제 인용된 근거만 화면에 표시한다. 제목, 출처 유형, 원문 링크를 함께 보여주고, 인용이 없으면 그 사실을 안내한다. 기존 `app.py`의 `cited_sources`를 그대로 사용한다.
+답변의 `[근거 N]` 표기를 파싱해 실제 인용된 근거만 화면에 표시한다. 제목, 출처 유형, 원문 링크를 함께 보여주고, 인용이 없으면 그 사실을 안내한다. `web/app.js`의 `citedSources`가 처리한다 (Streamlit 골격의 `cited_sources`를 옮김). 답변 마크다운은 marked로 변환하고 DOMPurify로 정제해 LLM 출력의 스크립트를 막는다.
 
 ## 8. 도메인 특화 기능 (F2010): 버전 맞춤 사용 가이드
 

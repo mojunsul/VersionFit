@@ -69,7 +69,7 @@
 | NF2002 | 수집 캐시 | (항목, 버전, 검색어) 수집 이력을 저장해 재수집 방지 |
 | NF2003 | API 키 관리 | `.env` 환경변수, `.gitignore` 등록 |
 | NF2004 | 내부 정보 비노출 | 화면에 키, 프롬프트 전문, 오류 추적 미표시 |
-| NF2005 | 모듈 분리 | `data_prep`(도메인 의존) / `vector_store` / `rag` / `services` / `app.py` |
+| NF2005 | 모듈 분리 | `data_prep`(도메인 의존) / `vector_store` / `rag` / `services` / `server.py`(API) / `web/`(화면) |
 | NF2006 | 외부 API 예절 | 호출 간격 1초 이상, 재시도, 식별용 User-Agent, GitHub 호출 제한 처리 |
 | NF2007 | 출처와 이용 조건 | 1.1 표와 README에 기록 |
 

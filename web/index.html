@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spring Boot 버전별 문서 Q&amp;A</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍃</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+<body>
+  <aside id="sidebar">
+    <h2>항목과 버전</h2>
+    <label for="item-filter">의존성</label>
+    <input id="item-filter" type="search" placeholder="이름으로 검색" autocomplete="off">
+    <select id="item-select" size="8" aria-label="의존성 목록"></select>
+    <label for="version-select">Spring Boot 버전</label>
+    <select id="version-select"></select>
+    <p id="index-status" class="caption"></p>
+    <button id="guide-btn" disabled>📘 버전 맞춤 사용 가이드</button>
+    <button id="clear-btn" class="secondary" disabled>이 대화 지우기</button>
+  </aside>
+
+  <main>
+    <header>
+      <h1>🍃 Spring Boot 버전별 문서 Q&amp;A</h1>
+      <p class="caption">의존성과 Spring Boot 버전을 고르면, 그 버전의 공식 문서를 근거로 답하고 출처를 함께 보여 줍니다.</p>
+    </header>
+    <div id="banner" class="banner" hidden></div>
+
+    <details id="explore" open>
+      <summary>🔎 조건으로 의존성 찾기</summary>
+      <form id="explore-form">
+        <input id="explore-input" placeholder="예: 메시징 큐에 쓸 수 있는 의존성" maxlength="300" required>
+        <button type="submit">찾기</button>
+      </form>
+      <p id="explore-status" class="caption"></p>
+      <div id="explore-cards" class="cards"></div>
+    </details>
+
+    <section id="chat-area" hidden>
+      <h3 id="chat-title"></h3>
+      <div id="messages"></div>
+      <form id="ask-form">
+        <textarea id="ask-input" rows="2" maxlength="1000" placeholder="궁금한 점을 물어보세요" required></textarea>
+        <button type="submit">보내기</button>
+      </form>
+    </section>
+    <p id="pick-hint" class="info">왼쪽에서 질문할 의존성을 고르거나, 위에서 조건으로 찾아보세요.</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

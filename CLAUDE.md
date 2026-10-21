@@ -15,11 +15,12 @@
 - 임베딩 모델을 바꾸면 `chroma_db/`를 지우고 전체 재색인한다.
 
 # 구조 (NF2005 모듈 분리)
-의존 방향: `app.py → services → rag → data_prep, vector_store`. 반대 방향 import 금지. 파일은 필요해질 때 만든다.
+의존 방향: `server.py → services → rag → data_prep, vector_store`. 반대 방향 import 금지. 파일은 필요해질 때 만든다.
 
 | 경로 | 책임 |
 |---|---|
-| `app.py` | Streamlit 진입점. 조건 탐색 카드, 항목·버전 선택, (항목, 버전)별 대화, 사용 가이드 버튼, 수집 진행 상태, 근거 표시 |
+| `server.py` | FastAPI 진입점. `/api/*`(상태, 항목, 질문·가이드 SSE, 조건 탐색)와 `web/` 정적 화면 제공. 오류 추적은 서버 콘솔에만 |
+| `web/` | HTML·CSS·JS 화면. 조건 탐색 카드, 항목·버전 선택, (항목, 버전)별 대화(localStorage), 진행 상태, 인용 근거 표시. marked·DOMPurify(cdnjs) |
 | `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 (루트 기준 경로 계산 때문에 루트에 둔다) |
 | `scripts/` | 배치 스크립트. 루트에서 `python -m scripts.<이름>`으로 실행. `build_items`(items 색인), `fetch_docs`(문서 원문 수집) |
 | `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색), `external_docs.py`(외부 문서 출처, 지금은 springdoc) |
@@ -33,7 +34,7 @@
 python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt
 .venv/Scripts/python -m scripts.build_items   # 기대 출력: 로드한 항목 204건, 색인된 청크 204건
 .venv/Scripts/python -m scripts.fetch_docs    # 첫 실행 약 10분. 기대 출력: 보관 문서 4.1.x 128, 4.0.x 124, 3.5.x/3.4.x 122건
-.venv/Scripts/streamlit run app.py
+.venv/Scripts/uvicorn server:app          # http://127.0.0.1:8000 (로컬에서만 열림)
 ```
 
 # 환경 주의점
