@@ -114,6 +114,9 @@
   - 판별 문서: JPA 33/33/31/31, Redis 44/41/41/41, MongoDB 55/54/52/51, Elasticsearch 30×4 (4.1→3.4). 남은 include 0.
   - 다운로드 중 GitHub API 비로그인 한도(시간당 60회) 초과 → Trees API 결과를 `.tree.json`으로 캐시 (boot_docs.github_tree).
   - 대표 질문: JPA 4.0.x @EntityGraph(근거 JPA 4.0 문서 4개), Redis 3.5.x 직렬화(Redis 3.5 문서 5개), MongoDB 4.0.x 집계(MongoDB 5.0 문서 5개), Elasticsearch 4.1.x 검색 쿼리(Elasticsearch 6.1 문서 7개). 모두 구체적인 클래스·예시로 답함. verify 21/21.
+- Spring Security (2026-10-22): Boot 의존성 설정의 Spring Security 4.1.x 7.1.2-SNAPSHOT, 4.0.x 7.0.8-SNAPSHOT, 3.5.x 6.5.11, 3.4.x 6.4.13 → spring-security-bom 최신 릴리스 7.1.1/7.0.7/6.5.11/6.4.13, 브랜치 7.1.x/7.0.x/6.5.x/6.4.x. 저장소 Apache-2.0, 문서 `docs/modules/ROOT`(폴더가 깊고 하위 폴더 index.adoc에 본문). 주소 규칙은 Spring Data와 같음 (7.1 302, 7.0·6.5 200, 6.4 404).
+  - 판별 문서: security 190/190/187/174, oauth2-client(OAuth2 부분만) 37/37/31/30. 남은 include 0. `{registrationId}`, `{baseUrl}`은 Spring Security의 URL 자리표시자라 그대로 둠.
+  - 대표 질문: security 4.0.x "특정 경로만 인증 없이 허용"(Security 7.0 문서 6개, `requestMatchers(...).permitAll()` 예시), oauth2-client 3.5.x "구글 로그인"(Security 6.5 문서 5개, `spring.security.oauth2.client.registration.google` 설정). verify 21/21.
 - 출처 표기 (2026-10-22): README "출처와 라이선스" 절(저장소 9곳, Apache-2.0, 수정 고지)과 사이드바 하단 고지 추가.
 
 ## 4. 알려진 문제

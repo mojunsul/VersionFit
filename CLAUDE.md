@@ -23,7 +23,7 @@
 | `web/` | HTML·CSS·JS 화면. 조건 탐색 카드, 항목·버전 선택, (항목, 버전)별 대화(localStorage), 진행 상태, 인용 근거 표시. marked·DOMPurify(cdnjs) |
 | `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 (루트 기준 경로 계산 때문에 루트에 둔다) |
 | `scripts/` | 배치 스크립트. 루트에서 `python -m scripts.<이름>`으로 실행. `build_items`(items 색인), `fetch_docs`(문서 원문 수집), `compare_search`·`compare_rag`(F2014·F2015 비교), `verify`(명세 4장 자동 확인) |
-| `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색), `external_docs.py`(외부 문서 출처: springdoc, Spring Data JDBC·R2DBC·JPA·Redis·MongoDB·Elasticsearch. 판별 브랜치, Antora include 풀기) |
+| `data_prep/` | 외부 출처와 도메인 지식. LLM·Chroma 없음. `initializr.py`(항목), `boot_docs.py`(버전별 경로, 원문 수집, 매크로 정리, 후보 검색), `external_docs.py`(외부 문서 출처: springdoc, Spring Data JDBC·R2DBC·JPA·Redis·MongoDB·Elasticsearch, Spring Security. 판별 브랜치, Antora include 풀기) |
 | `vector_store/` | Chroma와 청킹. 도메인 모름. `store.py`(컬렉션), `chunking.py`(헤더 단위 청킹) |
 | `rag/` | LLM 흐름. `prompts.py`(프롬프트 3개 + 가이드·탐색용), `collect.py`(질문 시점 수집 F2003~F2005), `graph.py`(LangGraph retrieve/generate) |
 | `services/` | `guide.py`(버전 맞춤 사용 가이드 F2010), `explore.py`(조건 기반 항목 탐색 F2011) |

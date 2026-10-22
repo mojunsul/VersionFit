@@ -1,4 +1,4 @@
-"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data JDBC·R2DBC. (F2016 일부)
+"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data, Spring Security. (F2016 일부)
 
 항목 id가 SOURCES에 있으면, 그 항목의 질문 시점 수집에서 이 문서도 후보로 검색한다.
 Boot 버전마다 호환되는 판(브랜치·폴더)의 문서를 쓴다 (progress.md 3절).
@@ -23,26 +23,51 @@ _DATA_SHARED = ["pages/repositories/*.adoc", "pages/commons/*.adoc", "pages/obje
                 "pages/query-by-example.adoc", "pages/value-expressions.adoc"]
 
 
-def _spring_data(title: str, repo: str, slug: str, store: str, releases: dict[str, str], pages: list[str]) -> dict:
-    """releases: Boot 버전 → 모듈 릴리스 버전(BOM 값). 모듈 판(major.minor)이 브랜치 이름이다.
-    docs.spring.io는 최신판(Boot 4.1.x 짝)을 버전 없는 주소로, 가장 오래된 판(3.4.x 짝)은 내려서(404) GitHub 원문을 링크한다."""
+def _antora(title: str, repo: str, url_base: str, root: str, releases: dict[str, str], pages: list[str],
+            attributes) -> dict:
+    """Spring 프로젝트의 Antora 문서. releases: Boot 버전 → 프로젝트 릴리스 버전(Boot가 관리하는 값).
+    판(major.minor)이 브랜치 이름이다. docs.spring.io는 최신판(Boot 4.1.x 짝)을 버전 없는 주소로, 가장 오래된 판(3.4.x 짝)은
+    내려서(404) GitHub 원문을 링크한다. attributes(boot, short, release)는 판의 문서 속성을 만든다."""
     editions = {}
     for boot, release in releases.items():
-        short, commons = release.rsplit(".", 1)[0], DATA_COMMONS[boot]
-        base = f"https://docs.spring.io/spring-data/{slug}/reference/"
-        editions[boot] = {
-            "branch": f"{short}.x", "commons_branch": f"{commons}.x", "pages": pages + _DATA_SHARED, "page_urls": True,
-            "url": {"4.1.x": base, "3.4.x": None}.get(boot, f"{base}{short}/"), "label": f"{title} {short} 문서",
-            "attributes": {"store": store, "version": release, "include-xml-namespaces": "false",
+        short = release.rsplit(".", 1)[0]
+        editions[boot] = {"branch": f"{short}.x", "pages": pages, "page_urls": True,
+                          "url": {"4.1.x": url_base, "3.4.x": None}.get(boot, f"{url_base}{short}/"),
+                          "label": f"{title} {short} 문서", "attributes": attributes(boot, short, release)}
+    return {"repo": f"spring-projects/{repo}", "root": root, "license": "Apache-2.0", "editions": editions}
+
+
+def _spring_data(title: str, repo: str, slug: str, store: str, releases: dict[str, str], pages: list[str]) -> dict:
+    """Spring Data 모듈. commons 페이지는 Boot 버전의 릴리스 묶음이 정한 commons 판 브랜치에서 읽는다."""
+    def attributes(boot, short, release):
+        commons = DATA_COMMONS[boot]
+        return {"store": store, "version": release, "include-xml-namespaces": "false",
                            "spring-framework-docs": "https://docs.spring.io/spring-framework/reference",
                            "spring-data-commons-docs-url": f"https://docs.spring.io/spring-data/commons/reference/{commons}",
                            "spring-data-commons-javadoc-base": f"https://docs.spring.io/spring-data/commons/reference/{commons}/api/java",
                            "springdocsurl": "https://docs.spring.io/spring-framework/reference",
                            "springDocsUrl": "https://docs.spring.io/spring-framework/reference",
                            "springJavadocUrl": "https://docs.spring.io/spring-framework/docs/current/javadoc-api",
-                           "spring-framework-javadoc": "https://docs.spring.io/spring-framework/docs/current/javadoc-api"},
-        }
-    return {"repo": f"spring-projects/{repo}", "root": DATA_ROOT, "license": "Apache-2.0", "editions": editions}
+                           "spring-framework-javadoc": "https://docs.spring.io/spring-framework/docs/current/javadoc-api"}
+    s = _antora(title, repo, f"https://docs.spring.io/spring-data/{slug}/reference/", DATA_ROOT, releases,
+                pages + _DATA_SHARED, attributes)
+    for boot, edition in s["editions"].items():
+        edition["commons_branch"] = f"{DATA_COMMONS[boot]}.x"
+    return s
+
+
+def _security(title: str, pages: list[str]) -> dict:
+    """Spring Security. Boot spring-boot-dependencies의 Spring Security 값 4.1.x 7.1, 4.0.x 7.0, 3.5.x 6.5.11,
+    3.4.x 6.4.13 → Maven Central spring-security-bom 최신 릴리스 (2026-10-22 확인)."""
+    def attributes(boot, short, release):
+        return {"gh-tag": release, "spring-security-version": release, "icondir": "icons",
+                "spring-framework-reference-url": "https://docs.spring.io/spring-framework/reference",
+                "gh-url": f"https://github.com/spring-projects/spring-security/tree/{release}",
+                "gh-samples-url": "https://github.com/spring-projects/spring-security-samples",
+                "include-java": "example$docs-src", "include-kotlin": "example$docs-src", "include-xml": "example$docs-src",
+                "security-api-url": f"https://docs.spring.io/spring-security/reference/{short}/api/java/"}
+    return _antora(title, "spring-security", "https://docs.spring.io/spring-security/reference/", "docs/modules/ROOT",
+                   _releases("7.1.1", "7.0.7", "6.5.11", "6.4.13"), pages, attributes)
 
 
 def _releases(*versions: str) -> dict[str, str]:
@@ -83,6 +108,9 @@ SOURCES = {
                                        _releases("6.1.1", "6.0.7", "5.5.13", "5.4.13"),
                                        ["pages/elasticsearch.adoc", "pages/elasticsearch/*.adoc",
                                         "pages/elasticsearch/repositories/*.adoc", "pages/repositories.adoc"]),
+    "security": _security("Spring Security", ["pages/*.adoc", "pages/features/**", "pages/servlet/**", "pages/reactive/**",
+                                              "pages/migration/**", "pages/migration-*/**", "pages/native-image/**"]),
+    "oauth2-client": _security("Spring Security", ["pages/servlet/oauth2/**", "pages/reactive/oauth2/**"]),
 }
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
@@ -113,8 +141,9 @@ def _include_target(target: str, repo: str, branch: str, path: str) -> tuple[str
         return COMMONS_REPO, f"{DATA_ROOT}/{m[1] or 'page'}s/{m[2]}"
     if target.startswith("example$"):
         return "", ""  # 예제 코드는 빌드할 때 테스트 소스에서 복사돼 저장소 문서 폴더에 없다. 줄을 지운다
-    if target.startswith("partial$"):
-        return repo, f"{DATA_ROOT}/partials/{target.removeprefix('partial$')}"
+    if target.startswith("partial$"):  # 포함하는 문서가 속한 Antora 모듈의 partials (저장소마다 위치가 다르다)
+        module = path[:path.index("/modules/ROOT/") + len("/modules/ROOT")] if "/modules/ROOT/" in path else DATA_ROOT
+        return repo, f"{module}/partials/{target.removeprefix('partial$')}"
     if repo != _SPRINGDOC["repo"] and "$" not in target and "{" not in target:
         return repo, f"{path.rsplit('/', 1)[0]}/{target}"
     return None  # 예: springdoc의 광고 조각 {docdir}/_ad-in-article.adoc. 줄은 그대로 둔다
@@ -127,6 +156,7 @@ def _expand(repo: str, branch: str, path: str, fetch: bool, commons_branch: str 
         return text
     # include 경로가 문서 속성일 수 있다 (예: :vector-search-intro-include: partial$...). 상위 문서의 정의도 물려받는다
     defs = {**(defs or {}), **dict(re.findall(r"(?m)^:([\w-]+):[ \t]*(\S.*)$", text))}
+    text = re.sub(r"(?m)^include-code::.*$", "", text)  # 빌드 때 테스트 소스에서 가져오는 예제 코드 매크로. 사본에 없다
 
     def sub(m):
         target = re.sub(r"\{([\w-]+)\}", lambda a: defs.get(a[1], a[0]), m[1])
@@ -162,12 +192,14 @@ def _conditionals(text: str, attrs: dict[str, str]) -> str:
 
 
 def _pages(s: dict, edition: dict, paths: list[str]) -> list[str]:
-    """원문 경로 중 이 판의 본문 페이지. 밑줄 조각, index, nav는 본문이 아니다."""
+    """원문 경로 중 이 판의 본문 페이지. 패턴의 *는 한 폴더 안, **는 하위 폴더까지.
+    밑줄 조각, nav, 최상위 index(목차 묶음)는 본문이 아니다. 하위 폴더의 index는 본문이다 (예: servlet/oauth2/index.adoc)."""
     root = s["root"] + "/"
     rels = [p.removeprefix(root) for p in paths if p.startswith(root) and p.endswith(".adoc")]
-    return sorted(r for r in rels if any(fnmatch(r, pat) and "/" not in r.removeprefix(pat.split("*")[0])
+    return sorted(r for r in rels if any(fnmatch(r, pat) and ("**" in pat or "/" not in r.removeprefix(pat.split("*")[0]))
                                          for pat in edition["pages"])
-                  and not r.rsplit("/", 1)[-1].startswith("_") and r.rsplit("/", 1)[-1] not in ("index.adoc", "nav.adoc"))
+                  and not r.rsplit("/", 1)[-1].startswith("_") and r.rsplit("/", 1)[-1] != "nav.adoc"
+                  and not (r.endswith("index.adoc") and r.count("/") <= 1))
 
 
 def download(source: str) -> int:
@@ -178,7 +210,8 @@ def download(source: str) -> int:
         paths = github_tree(s["repo"], branch, _local(s["repo"], branch, ".tree.json"))
         for edition in (e for e in s["editions"].values() if e["branch"] == branch):
             for rel in _pages(s, edition, paths):
-                _expand(s["repo"], branch, f"{s['root']}/{rel}", fetch=True, commons_branch=edition.get("commons_branch"))
+                _expand(s["repo"], branch, f"{s['root']}/{rel}", fetch=True, commons_branch=edition.get("commons_branch"),
+                        defs=edition.get("attributes"))
         if s.get("attributes_from"):
             _read(s["repo"], branch, s["attributes_from"], fetch=True)
     return sum(1 for _ in (ROOT / CONFIG["paths"]["external_docs_dir"]).rglob("*") if _.is_file()) - before
@@ -209,7 +242,7 @@ def load(source: str, version: str) -> dict[str, str]:
     for rel in _pages(s, edition, paths):
         attrs = dict(_attributes(source, edition))  # 본문 속성 정의(:이름: 값)가 다른 문서로 새지 않게 문서마다 복사한다
         text = _conditionals(_expand(s["repo"], edition["branch"], f"{s['root']}/{rel}", fetch=False,
-                                     commons_branch=edition.get("commons_branch")), attrs)
+                                     commons_branch=edition.get("commons_branch"), defs=edition.get("attributes")), attrs)
         text = re.sub(r"\{([\w-]+)\}", lambda m: attrs.get(m[1], m[0]), text)
         docs[f"{source}:{rel}"] = clean(text)
     return docs
