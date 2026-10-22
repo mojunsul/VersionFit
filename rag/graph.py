@@ -7,6 +7,7 @@ from typing import TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from config import CONFIG
+from data_prep.boot_docs import doc_id_for_item
 from rag.collect import chat_model
 from rag.prompts import ANSWER, GENERAL
 from vector_store.store import get_collection
@@ -42,16 +43,28 @@ def retrieve(state: State) -> State:
     sources += state.get("extra_sources", [])
     docs = get_collection("docs")
     doc_ids = state.get("doc_ids")
-    where = {"$and": [{"item_id": item["id"]}, {"boot_version": version}]
-                     + ([{"doc_id": {"$in": doc_ids}}] if doc_ids else [])}
     query = "\n".join([state["question"], ", ".join(state.get("terms") or [])]).strip()
+
+    def run(ids: list[str] | None, n: int, mode: str) -> list:
+        if n <= 0:
+            return []
+        where = {"$and": [{"item_id": item["id"]}, {"boot_version": version}]
+                         + ([{"doc_id": {"$in": ids}}] if ids else [])}
+        if mode == "mmr":
+            return docs.max_marginal_relevance_search(query, k=n, fetch_k=search["fetch_k"],
+                                                      lambda_mult=search["lambda_mult"], filter=where)
+        return docs.similarity_search(query, k=n, filter=where)
+
+    # 버전별 차이(패키지 이동 등)는 항목 자체의 Boot 문서에 있다. 외부 문서가 많아도 그 문서 청크 몇 개는 먼저 확보한다.
+    # 몇 자리 안 되는 몫을 MMR로 고르면 다양성 때문에 2~3위 정답 청크를 건너뛰어, 관련도 순으로 고른다
+    own = doc_id_for_item(item["doc_url"]) if item["doc_url"] else None
+    reserve = search["own_doc_k"] if doc_ids and own in doc_ids and len(doc_ids) > 1 else 0
     if doc_ids == []:  # 이 질문에 고른 문서가 없다
         found = []
-    elif search["mode"] == "mmr":
-        found = docs.max_marginal_relevance_search(query, k=k, fetch_k=search["fetch_k"],
-                                                 lambda_mult=search["lambda_mult"], filter=where)
+    elif reserve:
+        found = run([own], reserve, "similarity") + run([d for d in doc_ids if d != own], k - reserve, search["mode"])
     else:
-        found = docs.similarity_search(query, k=k, filter=where)
+        found = run(doc_ids, k, search["mode"])
 
     seen = set()
     for d in found:

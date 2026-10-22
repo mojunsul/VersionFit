@@ -12,6 +12,7 @@ overlap = 200
 top_k = 8
 mode = "mmr"          # similarity | mmr. 비교 결과 rag-design.md 6.1
 fetch_k = 30          # mmr일 때 먼저 가져올 후보 수
+own_doc_k = 3         # 외부 문서와 함께 검색할 때 항목 자체의 Boot 문서에서 관련도 순으로 먼저 확보할 근거 수
 lambda_mult = 0.6     # mmr 관련도 비중 (1 = similarity와 같음). 0.5는 비슷한 섹션이 많은 문서에서 정답을 밀어냄
 
 [collect]

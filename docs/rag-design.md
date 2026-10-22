@@ -52,7 +52,7 @@
 ## 4. 검색과 병합 (F2006, F2014)
 
 1. 선택 항목의 `items` 청크를 검색 없이 항상 포함.
-2. `docs`에서 `item_id`·`boot_version`·`doc_id`(이 질문을 위해 수집 단계가 고른 문서) 필터 후 MMR 검색 (후보 30개 → 7개, 6.1). 검색 질의는 질문 뒤에 수집 단계 프롬프트1의 영어 검색어를 붙인 것이다 (6.1-1). 가이드는 Initializr 의존성 좌표를 검색 밖 근거로 추가한다.
+2. `docs`에서 `item_id`·`boot_version`·`doc_id`(이 질문을 위해 수집 단계가 고른 문서) 필터 후 MMR 검색 (후보 30개 → 7개, 6.1). 검색 질의는 질문 뒤에 수집 단계 프롬프트1의 영어 검색어를 붙인 것이다 (6.1-1). 항목 자체의 Boot 문서와 외부 문서가 함께 선택되면, Boot 문서에서 관련도 순으로 `own_doc_k`(3)개를 먼저 확보하고 나머지를 MMR로 채운다 (6.1-2). 가이드는 Initializr 의존성 좌표를 검색 밖 근거로 추가한다.
 3. 두 결과를 병합하고 청크 ID 기준으로 중복 제거.
 4. 근거 번호를 부여하고 출처 유형을 구분해 프롬프트에 전달.
 
@@ -128,6 +128,20 @@
 - 기본 방식(mmr)에서는 5개 모두 정답 근거가 7개 안에 남았다. kafka·pulsar는 1위로 올랐고 springdoc은 조금 내려갔다. springdoc 질문은 이미 "Swagger UI 경로"라는 영어 단어가 있어 붙인 검색어가 FAQ의 비슷한 섹션들을 더 끌어온 것으로 보인다.
 - 이번 변경을 하게 된 질문: Spring Data JDBC 4.1.x "join sql 작성법"은 근거 7개 중 Spring Data JDBC 문서가 2개 → 5개, jOOQ·H2 콘솔 같은 무관한 Boot 청크가 빠졌고 답에 `@Query`로 쿼리를 직접 지정하는 방법이 들어갔다.
 - RAG 전후 비교(rag-comparison.md)와 명세 4장 자동 확인(21/21)은 판정이 같다.
+
+### 6.1-2 항목 자체 Boot 문서 근거 확보 (2026-10-22)
+
+Spring Kafka 문서를 출처로 넣자 kafka 4.0.x 질문의 근거 7자리를 Kafka 문서 청크가 차지해, 패키지 이동(`org.springframework.boot.kafka.autoconfigure`)이 적힌 Boot 문서 청크가 빠졌다 (RAG 전후 비교 1번 X). 버전별 차이는 Boot 문서에 있으므로 항목 자체 Boot 문서에서 근거를 먼저 확보한다.
+- 처음엔 2자리를 MMR로 골랐는데, 자리가 적으면 다양성 때문에 관련도 2~3위인 정답 청크를 건너뛰어 kafka 3.5.x까지 틀렸다. Boot 문서 몫은 관련도 순(similarity)으로 3자리를 고른다.
+
+| 질문 (mmr, 정답 근거 순위) | 외부 문서 추가 직후 | own_doc_k 2 (MMR) | own_doc_k 3 (관련도 순) |
+|---|---|---|---|
+| kafka 4.0.x `KafkaProperties` 패키지 | 없음 | 없음 | **3** |
+| kafka 4.0.x `JacksonJsonDeserializer` | 1 | 1 | 1 |
+| web 4.0.x `tools.jackson` | 2 | 4 | 5 |
+| pulsar 3.5.x, springdoc 4.1.x / 3.5.x | 1, 6, 2 | 1, 6, 2 | 1, 6, 2 |
+
+- web은 Boot 문서 몫을 정답 없는 servlet 문서 청크가 차지해 조금 밀렸지만 7개 안에 남는다. RAG 전후 비교 RAG 6/6 정답, 명세 4장 자동 확인 21/21.
 
 ### 6.2 답변 모델 비교 (2026-10-21)
 
