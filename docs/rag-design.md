@@ -70,7 +70,28 @@
 |---|---|---|
 | 청크 크기 / 중복 | 1000자 / 200자 | 명세 예시. 검증 단계에서 바꿔 비교 |
 | Top-k | 8 (항목 메타 1 + 문서 청크) | 검증 단계에서 조정 |
-| 검색 방식 | similarity (심화: mmr, fetch_k 30) | |
+| 검색 방식 | ~~similarity~~ → **mmr** (fetch_k 30) | 6.1 비교에서 정답 근거를 빼지 않고 중복 섹션을 줄임 (2026-10-22 변경) |
+
+### 6.1 검색 방식 비교: similarity vs MMR (F2014, 2026-10-22)
+
+`python -m scripts.compare_search`. 같은 질문으로 근거 검색(`retrieve`)만 비교했다. 문서 근거 7개(top_k 8 - 항목 정보 1), MMR은 후보 30개(fetch_k)에서 `lambda_mult` 0.5(LangChain 기본값)로 고른다. "정답 근거 순위"는 답을 판별하는 단어가 처음 나오는 근거 번호.
+
+| 항목·버전 (색인 청크 수) | 방식 | 고유 섹션 / 7 | 정답 근거 순위 |
+|---|---|---|---|
+| kafka 4.0.x (11) | similarity | 5 | `JacksonJsonDeserializer` 3, `kafka.autoconfigure.KafkaProperties` 2 |
+| | mmr | 5 | 3, 2 |
+| pulsar 3.5.x (24) | similarity | 7 | `spring-boot-starter-pulsar-reactive` 2 |
+| | mmr | 7 | 2 |
+| web 4.0.x (116) | similarity | 5 | `tools.jackson` 2 |
+| | mmr | **7** | 2 |
+| springdoc-openapi 4.1.x (138) | similarity | 7 | `springdoc.swagger-ui.path` **7** |
+| | mmr | 7 | **3** |
+| springdoc-openapi 3.5.x (112) | similarity | 5 | `springdoc.swagger-ui.path` 3 |
+| | mmr | 5 | 3 |
+
+- MMR이 정답 근거를 뺀 경우는 없었다. 순위가 같거나 앞당겨졌다 (springdoc 4.1.x 7위 → 3위).
+- 색인 청크가 많은 경우(web 116)에 같은 섹션 반복이 줄었다 (고유 섹션 5 → 7). kafka(11), pulsar(24)처럼 청크가 적으면 후보 자체가 적어 차이가 없다.
+- 질문당 (항목, 버전)으로 걸러 검색하므로 후보 풀이 작아 효과가 크지 않다. 수집 문서가 늘수록 차이가 커질 것으로 보지만 확인하지 않았다.
 
 ## 7. 근거 표시 (F2008)
 

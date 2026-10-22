@@ -18,7 +18,7 @@
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
 | F2011 | 조건 기반 항목 탐색 | 완료 | `services/explore.py`, `POST /api/explore`, `web/` 카드 → 해당 항목 대화 이동 |
 | F2012 | 진행 상태·안내 | 완료 | `collect(on_step=)` → `server.py` SSE `step` → 화면 진행 박스. 키 누락·items 0건·원문 없음·문서 근거 없음(`no_docs_notice`)·오류 안내 |
-| F2014 | 심화: MMR | 일부 | `search.mode = "mmr"` 분기 구현, 비교 실험 미착수 |
+| F2014 | 심화: MMR | 완료 | 기본 검색 방식 mmr (`config.toml`), 비교 `scripts/compare_search.py` → rag-design.md 6.1 |
 | F2015 | 심화: RAG 전후 비교 | 미착수 | 선택함 |
 | F2016 | 심화: 여러 문서 출처 결합 | 일부 | springdoc-openapi 문서 추가 (`data_prep/external_docs.py`). 다른 외부 문서는 미착수 |
 | F2013 | 심화: HTML 프론트 | 완료 | `server.py` + `web/` (Streamlit `app.py` 삭제) |
@@ -93,6 +93,7 @@
   - 수집 결과: 3.x판 16개, 2.x판 15개 (`_` 조각·index 제외). nano로 "Swagger UI 경로" 질문: 4.1.x → `springdoc.swagger-ui.path` [3.x 문서, springdoc.org/], 3.5.x → 같은 속성 [2.x 문서, /v2/], 판 섞임 없음. 4.1.x 가이드에 설정 속성이 근거와 함께 나옴 (이전엔 "확인되지 않는다"). kafka 4.0.x 회귀 정상.
   - 4.1.x 가이드에 Initializr 좌표(3.1.0)와 문서 예시(3.1.1)가 함께 나옴. nano라 형식이 어수선함.
 - 웹 서버 (FastAPI TestClient + uvicorn, 2026-10-21): status·items(204)·docs-count 정상, 잘못된 항목 404·버전 400·빈 질문 422. `/api/ask` 이벤트 step×4 → result, kafka 4.0.x `JacksonJsonDeserializer`. springdoc 4.1.x 가이드 출처에 3.x 문서 포함, htmx 가이드는 외부 문서 안내. uvicorn 실측: step이 0.5→1.8→2.9초에 하나씩 도착, result 6.0초 (버퍼링 없음). 브라우저 클릭 동작은 사용자 확인 필요.
+- similarity vs MMR (2026-10-22, 5개 질문, 표는 rag-design.md 6.1): MMR이 정답 근거를 뺀 경우 0. springdoc 4.1.x 정답 순위 7→3, web 4.0.x 고유 섹션 5→7, 나머지 동일. 색인 청크가 적은 (항목, 버전)(kafka 11, pulsar 24)은 차이 없음.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
