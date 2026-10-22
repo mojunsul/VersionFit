@@ -5,7 +5,9 @@ Boot 버전마다 호환되는 판(브랜치·폴더)의 문서를 쓴다 (progr
 원문은 data/external_docs/{저장소}/{브랜치}/에 받는다. 같은 저장소를 쓰는 출처는 사본을 함께 쓴다.
 """
 import html
+import posixpath
 import re
+import textwrap
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -83,6 +85,15 @@ def _project(title: str, repo: str, root: str, releases: tuple[str, ...]) -> dic
                 "spring-framework-reference-url": "https://docs.spring.io/spring-framework/reference"}
     return _antora(title, repo, f"https://docs.spring.io/{repo}/reference/", root, _releases(*releases),
                    ["pages/**"], attributes, gone=())
+
+
+def _cloud(title: str, name: str, releases: tuple[str, ...]) -> dict:
+    """Spring Cloud 프로젝트 (spring-cloud 조직, docs/modules/ROOT). 판은 Boot 버전의 릴리스 트레인 BOM 값:
+    4.1.x·4.0.x 2025.1.3 (Initializr bom-ranges), 3.5.x 2025.0.3 (spring-cloud-build 4.3 = Boot 3.5.0),
+    3.4.x 2024.0.3 (spring-cloud-build 4.2 = Boot 3.4.0) → spring-cloud-dependencies pom (2026-10-22 확인)."""
+    s = _project(title, f"spring-cloud-{name}", "docs/modules/ROOT", releases)
+    s["repo"] = f"spring-cloud/spring-cloud-{name}"
+    return s
 
 
 # 모듈 릴리스 버전은 spring-data-bom 2026.0.1 / 2025.1.7 / 2025.0.13 / 2024.1.13 값 (2026-10-22 확인)
@@ -166,6 +177,21 @@ SOURCES = {
                             "label": f"MyBatis Spring Boot Starter {v} 문서"}
                      for boot, v in [("4.1.x", "4.1.0"), ("4.0.x", "4.0.1"), ("3.5.x", "3.0.5"), ("3.4.x", "3.0.5")]},
     },
+    "cloud-feign": _cloud("Spring Cloud OpenFeign", "openfeign", ("5.0.3", "5.0.3", "4.3.3", "4.2.3")),
+    "cloud-gateway": _cloud("Spring Cloud Gateway", "gateway", ("5.0.3", "5.0.3", "4.3.5", "4.2.7")),
+    "cloud-config-client": _cloud("Spring Cloud Config", "config", ("5.0.5", "5.0.5", "4.3.4", "4.2.4")),
+    "cloud-eureka": _cloud("Spring Cloud Netflix", "netflix", ("5.0.2", "5.0.2", "4.3.3", "4.2.3")),
+    "cloud-loadbalancer": _cloud("Spring Cloud Commons", "commons", ("5.0.3", "5.0.3", "4.3.3", "4.2.4")),
+    "cloud-resilience4j": _cloud("Spring Cloud Circuit Breaker", "circuitbreaker", ("5.0.3", "5.0.3", "3.3.3", "3.2.3")),
+    # Testcontainers (mkdocs Markdown, 예제는 codeinclude로 테스트 소스에서). 판은 Boot 의존성 설정의 값
+    # 4.1.x·4.0.x 2.0.5, 3.5.x 1.21.4, 3.4.x 1.20.6 = 릴리스 태그 (2026-10-22 확인). 사이트는 최신판만 보여 준다
+    "testcontainers": {
+        "repo": "testcontainers/testcontainers-java", "root": "docs", "license": "MIT",
+        "editions": {boot: {"branch": v, "pages": ["**.md"], "page_urls": True, "page_suffix": "/",
+                            "url": "https://java.testcontainers.org/" if v == "2.0.5" else None,
+                            "label": f"Testcontainers {v} 문서", "attributes": {"latest_version": v}}
+                     for boot, v in [("4.1.x", "2.0.5"), ("4.0.x", "2.0.5"), ("3.5.x", "1.21.4"), ("3.4.x", "1.20.6")]},
+    },
     "mybatis-core": {
         "repo": "mybatis/mybatis-3", "root": "src/site/markdown", "license": "Apache-2.0",
         "editions": {boot: {"branch": "mybatis-3.5.19", "pages": ["*.md"], "page_urls": True,
@@ -182,6 +208,8 @@ SOURCES |= {alias: SOURCES[base] for base, aliases in {
     "data-redis": ["data-redis-reactive"], "data-mongodb": ["data-mongodb-reactive"],
     "kafka": ["kafka-streams"], "rabbitmq": ["rabbitmq-streams"], "batch": ["batch-jdbc", "batch-data-mongodb"],
     "session-data-redis": ["session-jdbc", "session-hazelcast", "session-data-mongodb"],
+    "cloud-gateway": ["cloud-gateway-reactive"], "cloud-config-client": ["cloud-config-server"],
+    "cloud-eureka": ["cloud-eureka-server"], "cloud-loadbalancer": ["cloud-starter"],
 }.items() for alias in aliases}
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
@@ -247,10 +275,36 @@ def _freemarker(repo: str, branch: str, text: str, fetch: bool) -> str:
     return re.sub(r'<@f\.snippets name="([^"]+)"\s*/>', snippets, text).strip() + "\n"
 
 
-def _markdown(text: str) -> str:
-    """MyBatis 사이트 Markdown을 AsciiDoc 모양으로: # 제목 → = 제목, ``` → ----. 코드 블록 밖의 HTML 태그와
-    앞머리(title:, author:)는 지운다. 코드 블록 안(XML 매퍼 예제)은 그대로 둔다."""
+def _code_block(code: str, selector: str) -> str:
+    """mkdocs codeinclude의 block:이름 / inside_block:이름. 이름이 든 줄부터 중괄호 짝이 맞을 때까지 (inside는 첫·끝 줄 제외)."""
+    kind, _, name = selector.partition(":")
+    lines = code.split("\n")
+    start = next((i for i, l in enumerate(lines) if re.search(rf"\b{re.escape(name)}\b", l) and "{" in l), None)
+    if not name or start is None:
+        return code
+    depth, end = 0, start
+    for end in range(start, len(lines)):
+        depth += lines[end].count("{") - lines[end].count("}")
+        if depth <= 0:
+            break
+    block = lines[start:end + 1]
+    return textwrap.dedent("\n".join(block[1:-1] if kind == "inside_block" else block))
+
+
+def _markdown(text: str, repo: str, branch: str, path: str, fetch: bool) -> str:
+    """사이트 Markdown(MyBatis, Testcontainers)을 AsciiDoc 모양으로: # 제목 → = 제목, ``` → ----.
+    코드 블록 밖의 HTML 태그와 앞머리(title:, author:)는 지운다. 코드 블록 안(XML 매퍼 예제)은 그대로 둔다.
+    mkdocs 확장: codeinclude(테스트 소스의 구간)를 코드 블록으로, 탭(=== "Gradle")은 이름 줄로, {{값}}은 문서 속성으로."""
     text = re.sub(r"\A(?:\s*<!--.*?-->)?(?:\s*\w+: [^\n]*\n)*", "", text, flags=re.S)  # 라이선스 주석, 앞머리
+
+    def codeinclude(m):
+        blocks = []
+        for title, target, selector in re.findall(r"\[([^\]]*)\]\(([^)\s]+)\)[ \t]*(\S*)", m[1]):
+            code = _read(repo, branch, posixpath.normpath(posixpath.join(posixpath.dirname(path), target)), fetch) or ""
+            blocks.append(f"{title}:\n\n```\n{_code_block(code, selector).strip()}\n```")
+        return "\n\n".join(blocks)
+    text = re.sub(r"<!--codeinclude-->(.*?)<!--/codeinclude-->", codeinclude, text, flags=re.S)
+    text = re.sub(r"\{\{\s*([\w-]+)\s*\}\}", r"{\1}", text)
     out, fence = [], False
     for line in text.split("\n"):
         if line.lstrip().startswith("```"):
@@ -260,6 +314,8 @@ def _markdown(text: str) -> str:
             out.append(line)
         elif m := re.match(r"(#{1,6}) (.+)", line):
             out.append(f"{'=' * len(m[1])} {m[2]}")
+        elif m := re.match(r'===\s+"([^"]+)"', line):
+            out.append(f"{m[1]}:")  # 내용 탭. 헤더(===)로 읽히지 않게 한다
         else:
             out.append(re.sub(r"<[^>]+>", "", re.sub(r"<h1[^>]*>.*?</h1>", "", line)))
     return "\n".join(out)
@@ -271,7 +327,7 @@ def _expand(repo: str, branch: str, path: str, fetch: bool, commons_branch: str 
     if path.endswith(".html"):
         return _freemarker(repo, branch, text, fetch)
     if path.endswith(".md"):
-        return _markdown(text)
+        return _markdown(text, repo, branch, path, fetch)
     if depth > 5:
         return text
     # include 경로가 문서 속성일 수 있다 (예: :vector-search-intro-include: partial$...). 상위 문서의 정의도 물려받는다
