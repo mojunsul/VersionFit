@@ -28,6 +28,8 @@
 | github.com/spring-projects/spring-security | 외부 문서 (Spring Security Antora AsciiDoc) | Apache-2.0 (GitHub API로 확인), NOTICE 없음, 2026-10-22 확인 | Boot 4.1/4.0/3.5/3.4 → 브랜치 7.1.x/7.0.x/6.5.x/6.4.x |
 | github.com/spring-projects/spring-data-relational, spring-data-commons | 외부 문서 (Spring Data JDBC·R2DBC Antora AsciiDoc, commons 페이지는 include로 포함) | Apache-2.0 (GitHub API로 확인), 2026-10-22 확인 | Boot 4.1/4.0/3.5/3.4 → 브랜치 4.1.x/4.0.x/3.5.x/3.4.x |
 | github.com/projectlombok/lombok | 외부 문서 (Lombok 기능 문서, FreeMarker HTML 템플릿과 예제 코드) | MIT (LICENSE 파일, GitHub API는 NOASSERTION), 2026-10-22 확인 | Boot 4.1/4.0 → 태그 v1.18.48, 3.5 → v1.18.46, 3.4 → v1.18.42 |
+| github.com/hibernate/hibernate-validator | 외부 문서 (Hibernate Validator 레퍼런스 AsciiDoc과 예제 코드) | Apache-2.0 (GitHub API로 확인), 2026-10-22 확인 | Boot 4.1 → 태그 9.1.5.Final, 4.0 → 9.0.2.Final, 3.5·3.4 → 8.0.3.Final |
+| github.com/mybatis/spring-boot-starter, mybatis-3 | 외부 문서 (MyBatis 스타터·MyBatis 3 사이트 Markdown) | Apache-2.0 (GitHub API로 확인), 2026-10-22 확인 | Boot 4.1 → 스타터 4.1.0, 4.0 → 4.0.1, 3.5·3.4 → 3.0.5, 코어는 모두 3.5.19 |
 
 ### 1.2 지원 버전
 
@@ -66,7 +68,7 @@
 | F2013 | UI | 프론트엔드 직접 구현 | FastAPI(`server.py`) + HTML·CSS·JS(`web/`), SSE 진행 상태 | 심화 (선택) |
 | F2014 | 검색 | MMR 검색 | 후보 넉넉히 조회 후 MMR로 선별, 유사도 검색과 비교 | 심화 (선택) |
 | F2015 | 품질 | RAG 전후 비교 | 대표 질문 5개 이상, 3개 기준(사실 정확성·근거 제시·모름 응답)으로 비교 문서 작성 → `docs/rag-comparison.md` | 심화 (선택) |
-| F2016 | 수집 | 여러 문서 출처 결합 | Spring Boot 문서에 더해 26개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·redis-reactive·mongodb·mongodb-reactive·elasticsearch, security·oauth2-client·oauth2-resource-server·security-saml2·spring-security-webauthn, kafka·kafka-streams, rabbitmq·rabbitmq-streams, batch·batch-jdbc·batch-data-mongodb, session-data-redis·session-jdbc·session-hazelcast·session-data-mongodb, lombok)의 프로젝트 문서를 Boot 버전에 맞는 판으로 결합, 근거에 출처 종류 표시 | 심화 (선택) |
+| F2016 | 수집 | 여러 문서 출처 결합 | Spring Boot 문서에 더해 28개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·redis-reactive·mongodb·mongodb-reactive·elasticsearch, security·oauth2-client·oauth2-resource-server·security-saml2·spring-security-webauthn, kafka·kafka-streams, rabbitmq·rabbitmq-streams, batch·batch-jdbc·batch-data-mongodb, session-data-redis·session-jdbc·session-hazelcast·session-data-mongodb, lombok, validation, mybatis)의 프로젝트 문서를 Boot 버전에 맞는 판으로 결합, 근거에 출처 종류 표시 | 심화 (선택) |
 | (추가) | 생성 | 일반 지식 답변 | 문서 기반 답변이 확인되지 않거나 인용이 없을 때 사용자가 버튼을 누르면 근거 없이 LLM 일반 지식으로 답하고, "문서 근거 없음"으로 구분 표시 (F2007은 그대로) | 추가 |
 
 ## 3. 비기능 요구사항
