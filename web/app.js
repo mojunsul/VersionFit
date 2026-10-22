@@ -105,6 +105,7 @@ function generalButton(m) {
     const key = chatKey();
     btn.disabled = true;
     btn.textContent = "일반 지식 답변을 만드는 중...";
+    btn.scrollIntoView({ behavior: "smooth", block: "center" }); // 진행 중 표시가 바로 보이게
     try {
       const { answer } = await getJson("/api/general", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -201,7 +202,8 @@ async function send(kind, question) {
   const user = { role: "user", content: question };
   messages.push(user);
   saveChat(messages);
-  $("messages").append(renderMessage(user));
+  const userNode = renderMessage(user);
+  $("messages").append(userNode);
   syncEmpty();
 
   const status = el("details", { className: "msg status", open: true });
@@ -209,6 +211,7 @@ async function send(kind, question) {
   const steps = el("ul");
   status.append(label, steps);
   $("messages").append(status);
+  userNode.scrollIntoView({ behavior: "smooth", block: "start" }); // 보낸 질문과 진행 상태가 바로 보이게
   setBusy(true);
   try {
     const url = kind === "guide" ? "/api/guide" : "/api/ask";
