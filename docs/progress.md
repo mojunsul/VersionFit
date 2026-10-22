@@ -108,6 +108,7 @@
   - 수집 결과: data-jdbc 판별 문서 35/34/33/32, data-r2dbc 32/31/31/30 (4.1→3.4). 남은 include 0. `example$` include(빌드 때 테스트 소스에서 복사되는 예제 코드)는 저장소 문서 폴더에 없어 지움.
   - springdoc도 같은 방식으로 옮김. 본문은 그대로이고 조건 지시어 62쌍과 머리말 속성 줄만 빠짐 (전후 비교).
   - "join sql 작성법"(Spring Data JDBC): 4.1.x는 예전 질문의 검색어별 선택 캐시 때문에 새 문서를 못 봄 → `fetch_docs`가 새 파일이 생긴 출처의 선택 캐시를 지우도록 수정. 이후 근거에 "Spring Data JDBC 4.1 문서"(Query Methods, Using @Query)가 붙지만 답은 여전히 "join 작성 예시는 확인되지 않는다". 원문에도 join 예시는 없고 "쿼리 메서드 이름 파생은 join 없이 WHERE에 쓸 수 있는 속성까지만" 한 줄뿐인데, 이 문장이 든 청크가 한국어 질문 검색 15위 안에 없음. verify 21/21.
+- 검색 질의에 영어 검색어 붙이기 (2026-10-22, rag-design.md 6.1-1): "join sql 작성법" 근거가 핵심 문장 청크 30위 → 9위, 근거 7개 중 Spring Data JDBC 2 → 5개, 답에 `@Query` 방법 포함. 5개 비교 질문(mmr): kafka 3,2 → 1,3, pulsar 2 → 1, web 2 → 2, springdoc 4.1.x 4 → 6, 3.5.x 3 → 4 (모두 7개 안). similarity로는 springdoc 4.1.x가 빠짐. compare_rag 판정 같음, verify 21/21.
 
 ## 4. 알려진 문제
 

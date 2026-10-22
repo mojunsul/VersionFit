@@ -92,6 +92,7 @@ def _is_indexed(col, item_id: str, version: str, doc_id: str) -> bool:
 def collect(item: dict, version: str, question: str, on_step=lambda message: None) -> dict:
     """질문에 필요한 문서를 docs 컬렉션에 채운다. on_step은 화면 진행 표시용 콜백이다. (F2012)
 
+    결과의 terms는 프롬프트1이 만든 영어 검색어로, 답변 검색 질의에도 붙인다 (graph.retrieve).
     결과의 doc_ids는 이 질문을 위해 고른 문서(캐시된 검색어 포함)와 항목 자체 문서다. 답변 검색은 이 범위로
     좁힌다. 같은 (항목, 버전)이라도 다른 질문 때문에 색인된 무관한 문서가 섞이지 않게 하기 위해서다.
     """
@@ -111,7 +112,7 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     if not new_terms:
         on_step("이미 수집한 검색어라 수집을 건너뜀")
         _save_log(log)  # 질문별 검색어는 새로 기록됐을 수 있다
-        return {**result, "doc_ids": _question_docs(log, key, terms, must)}
+        return {**result, "doc_ids": _question_docs(log, key, terms, must), "terms": terms}
 
     docs = load_docs(version)
     if not docs:
@@ -145,7 +146,7 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     for term in new_terms:
         log[key(term)] = selected
     _save_log(log)
-    return {**result, "doc_ids": _question_docs(log, key, terms, must)}
+    return {**result, "doc_ids": _question_docs(log, key, terms, must), "terms": terms}
 
 
 def _question_docs(log: dict, key, terms: list[str], must: str | None) -> list[str]:

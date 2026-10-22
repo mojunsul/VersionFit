@@ -19,9 +19,9 @@ CASES = [
 ]
 
 
-def measure(item: dict, version: str, question: str, words: list[str], mode: str, doc_ids: list[str]) -> dict:
+def measure(item: dict, version: str, question: str, words: list[str], mode: str, collected: dict) -> dict:
     CONFIG["search"]["mode"] = mode
-    state = {"item": item, "version": version, "question": question, "doc_ids": doc_ids}
+    state = {"item": item, "version": version, "question": question, "doc_ids": collected["doc_ids"], "terms": collected["terms"]}
     docs = [s for s in retrieve(state)["sources"]
             if not s["source_type"].startswith("Initializr")]
     ranks = {w: next((i for i, s in enumerate(docs, 1) if w in s["text"]), None) for w in words}
@@ -37,9 +37,9 @@ def main():
     print("|---|---|---|---|---|")
     try:
         for item_id, version, question, words in CASES:
-            doc_ids = collect(items[item_id], version, question)["doc_ids"]
+            collected = collect(items[item_id], version, question)
             for mode in ("similarity", "mmr"):
-                m = measure(items[item_id], version, question, words, mode, doc_ids)
+                m = measure(items[item_id], version, question, words, mode, collected)
                 ranks = ", ".join(f"`{w}` {r or '없음'}" for w, r in m["ranks"].items())
                 print(f"| {item_id} {version} | {mode} | {m['n']} | {m['sections']} | {ranks} |")
     finally:

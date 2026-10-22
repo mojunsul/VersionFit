@@ -1,6 +1,6 @@
 # RAG 전후 비교 (F2015)
 
-2026-10-22 측정, 같은 날 질문별 문서 범위 검색·MMR lambda_mult 0.6으로 바꾼 뒤 재측정 (판정 같음, 답변 전문은 재측정 결과). 재현: `python -m scripts.compare_rag`
+2026-10-22 측정, 같은 날 질문별 문서 범위 검색·MMR lambda_mult 0.6으로 바꾼 뒤 재측정 (판정 같음, 답변 전문은 재측정 결과). 검색 질의에 영어 검색어를 붙인 뒤(rag-design.md 6.1-1) 다시 재도 판정은 같다. 재현: `python -m scripts.compare_rag`
 
 ## 1. 방법
 

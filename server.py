@@ -138,7 +138,7 @@ def ask(body: Ask):
         added = collected["added_chunks"]
         step(f"새 문서 청크 {added}건 색인" if added else "이미 색인된 문서로 답합니다")
         step("답변을 만드는 중")
-        result = answer(item, version, question, doc_ids=collected["doc_ids"])
+        result = answer(item, version, question, doc_ids=collected["doc_ids"], terms=collected["terms"])
         return {**result, "notice": no_docs_notice(item, version, result["sources"], retry_hint=True)}
 
     return _stream(work)

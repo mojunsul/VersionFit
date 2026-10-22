@@ -95,7 +95,7 @@ def main():
     lists = {}
     for k in (4, 8):
         with mock.patch.dict(CONFIG["search"], {"top_k": k}):
-            state = {"item": kafka, "version": version, "question": q, "doc_ids": again["doc_ids"]}
+            state = {"item": kafka, "version": version, "question": q, "doc_ids": again["doc_ids"], "terms": again["terms"]}
             lists[k] = [s["title"] for s in graph.retrieve(state)["sources"]]
         print(f"  top_k={k}: {lists[k]}")
     check("Top-k를 바꾸면 근거 목록이 달라진다", len(lists[4]) != len(lists[8]), f"{len(lists[4])}개 → {len(lists[8])}개")
@@ -104,7 +104,8 @@ def main():
     check("LangGraph가 retrieve·generate 두 노드다", {"retrieve", "generate"} <= set(g.nodes),
           f"노드 {sorted(n for n in g.nodes if not n.startswith('__'))}")
     unknown_q = "Kafka 브로커에 권장되는 JVM 힙 메모리 크기는?"
-    unknown = graph.answer(kafka, "4.0.x", unknown_q, doc_ids=collect(kafka, "4.0.x", unknown_q)["doc_ids"])["answer"]
+    got = collect(kafka, "4.0.x", unknown_q)
+    unknown = graph.answer(kafka, "4.0.x", unknown_q, doc_ids=got["doc_ids"], terms=got["terms"])["answer"]
     print("  문서에 없는 질문 답:", unknown[:120].replace("\n", " "))
     check("문서에 없는 것을 물으면 확인되지 않는다고 답한다", "확인되지 않" in unknown)
 
@@ -152,7 +153,7 @@ def main():
     check("저장소와 git 이력에 API 키가 없다 (NF2003)", bool(key) and key not in history and not tracked and ignored == ".env",
           f".env gitignore={ignored == '.env'}, 이력·추적 파일 검색 결과 0건")
     # 수집도 가짜로 바꿔야 실제 색인에 시험 질문의 문서가 섞이지 않는다
-    fake_collect = mock.Mock(return_value={"added_chunks": 0, "doc_ids": []})
+    fake_collect = mock.Mock(return_value={"added_chunks": 0, "doc_ids": [], "terms": []})
     with mock.patch.object(server, "collect", fake_collect),             mock.patch.object(server, "answer", side_effect=RuntimeError("secret internal detail")):
         events = sse_events(client, "/api/ask", {"item_id": "kafka", "version": "4.0.x", "question": "오류 시험"})
     last = events[-1]

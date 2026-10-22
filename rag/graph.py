@@ -18,6 +18,7 @@ class State(TypedDict, total=False):
     question: str
     extra_sources: list[dict]  # 검색 밖에서 온 근거 (예: 의존성 좌표). 항목 정보 바로 뒤에 붙인다
     doc_ids: list[str] | None  # 이 질문을 위해 수집한 문서. None이면 (항목, 버전) 전체에서 검색
+    terms: list[str]  # 수집 단계의 영어 검색어. 한국어 질문이 영어 문서와 잘 맞도록 검색 질의에 붙인다
     sources: list[dict]
     answer: str
 
@@ -43,13 +44,14 @@ def retrieve(state: State) -> State:
     doc_ids = state.get("doc_ids")
     where = {"$and": [{"item_id": item["id"]}, {"boot_version": version}]
                      + ([{"doc_id": {"$in": doc_ids}}] if doc_ids else [])}
+    query = "\n".join([state["question"], ", ".join(state.get("terms") or [])]).strip()
     if doc_ids == []:  # 이 질문에 고른 문서가 없다
         found = []
     elif search["mode"] == "mmr":
-        found = docs.max_marginal_relevance_search(state["question"], k=k, fetch_k=search["fetch_k"],
+        found = docs.max_marginal_relevance_search(query, k=k, fetch_k=search["fetch_k"],
                                                  lambda_mult=search["lambda_mult"], filter=where)
     else:
-        found = docs.similarity_search(state["question"], k=k, filter=where)
+        found = docs.similarity_search(query, k=k, filter=where)
 
     seen = set()
     for d in found:
@@ -90,10 +92,10 @@ _graph = None
 
 
 def answer(item: dict, version: str, question: str, extra_sources: list[dict] | None = None,
-           doc_ids: list[str] | None = None) -> dict:
+           doc_ids: list[str] | None = None, terms: list[str] | None = None) -> dict:
     """{"answer": 답변, "sources": 근거 목록}. 근거 번호는 sources 순서(1부터)와 같다."""
     global _graph
     _graph = _graph or _build()
     out = _graph.invoke({"item": item, "version": version, "question": question,
-                         "extra_sources": extra_sources or [], "doc_ids": doc_ids})
+                         "extra_sources": extra_sources or [], "doc_ids": doc_ids, "terms": terms or []})
     return {"answer": out["answer"], "sources": out["sources"]}

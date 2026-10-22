@@ -54,7 +54,8 @@ def main():
     for n, (item_id, version, q, must, wrong, unknown_expected) in enumerate(CASES, 1):
         item = items[item_id]
         plain = llm.invoke(NO_RAG.format(name=item["name"], version=version, question=q)).content
-        rag = answer(item, version, q, doc_ids=collect(item, version, q)["doc_ids"])["answer"]
+        collected = collect(item, version, q)
+        rag = answer(item, version, q, doc_ids=collected["doc_ids"], terms=collected["terms"])["answer"]
         for label, text in (("LLM만", plain), ("RAG", rag)):
             j = judge(text, must, wrong, unknown_expected)
             rows.append(f"| {n} | {item_id} {version} | {label} | {j['fact']} | {j['cite']} | {j['unknown']} |")

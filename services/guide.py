@@ -28,8 +28,8 @@ def coordinate_sources(item: dict, version: str) -> list[dict]:
 def guide(item: dict, version: str, on_step=lambda message: None) -> dict:
     """{"answer", "sources"}. 문서 수집(collect)까지 포함한다."""
     question = GUIDE_QUESTION.format(version=version)
-    doc_ids = collect(item, version, question, on_step=on_step)["doc_ids"]
+    collected = collect(item, version, question, on_step=on_step)
     on_step("의존성 좌표를 확인하는 중")
     extra = coordinate_sources(item, version)
     on_step("가이드를 만드는 중")
-    return answer(item, version, question, extra_sources=extra, doc_ids=doc_ids)
+    return answer(item, version, question, extra_sources=extra, doc_ids=collected["doc_ids"], terms=collected["terms"])
