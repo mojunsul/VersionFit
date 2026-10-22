@@ -20,7 +20,7 @@
 | F2012 | 진행 상태·안내 | 완료 | `collect(on_step=)` → `server.py` SSE `step` → 화면 진행 박스. 키 누락·items 0건·원문 없음·문서 근거 없음(`no_docs_notice`)·오류 안내 |
 | F2014 | 심화: MMR | 완료 | 기본 검색 방식 mmr, lambda_mult 0.6 (`config.toml`), 비교 `scripts/compare_search.py` → rag-design.md 6.1 |
 | F2015 | 심화: RAG 전후 비교 | 완료 | `docs/rag-comparison.md`, `scripts/compare_rag.py` (mini, 6문항) |
-| F2016 | 심화: 여러 문서 출처 결합 | 완료 | 13개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·mongodb·elasticsearch, security, oauth2-client, kafka, rabbitmq, batch, session-data-redis)에 프로젝트 문서 결합 (`data_prep/external_docs.py`). 효과 rag-comparison.md 4절 |
+| F2016 | 심화: 여러 문서 출처 결합 | 완료 | 14개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·mongodb·elasticsearch, security, oauth2-client, kafka, rabbitmq, batch, session-data-redis, lombok)에 프로젝트 문서 결합 (`data_prep/external_docs.py`). 효과 rag-comparison.md 4절 |
 | F2013 | 심화: HTML 프론트 | 완료 | `server.py` + `web/` (Streamlit `app.py` 삭제) |
 
 1일차 마감(도메인 확정, 16시)용 요구사항 정의서는 작성 완료. RAG 설계문서는 초안이며 구현하면서 채운다 (값 변경 비교, 겪은 문제).
@@ -119,6 +119,8 @@
   - 대표 질문: security 4.0.x "특정 경로만 인증 없이 허용"(Security 7.0 문서 6개, `requestMatchers(...).permitAll()` 예시), oauth2-client 3.5.x "구글 로그인"(Security 6.5 문서 5개, `spring.security.oauth2.client.registration.google` 설정). verify 21/21.
 - Kafka·AMQP·Batch·Session (2026-10-22): Boot 의존성 설정(4.1.x/4.0.x/3.5.x/3.4.x) Spring Kafka 4.1/4.0/3.3.16/3.3.11, Spring AMQP 4.1/4.0/3.2.12/3.2.8, Spring Batch 6.0/6.0/5.2.6/5.2.4, Spring Session 4.1.1/4.0.5/3.5.7/3.4.7. Boot 3.5·3.4가 같은 판을 쓰는 경우가 있음. Maven Central 최신 릴리스 Kafka 4.1.1/4.0.7/3.3.16, AMQP 4.1.1/4.0.5/3.2.12, Batch 6.0.5/5.2.6, Session 4.1.1/4.0.5/3.5.7/3.4.7. 저장소 모두 Apache-2.0, NOTICE 없음, 해당 브랜치 있음.
   - 문서 위치: spring-kafka-docs/src/main/antora, src/reference/antora(AMQP), spring-batch-docs, spring-session-docs. docs.spring.io는 최신판만 302(버전 없는 주소), 나머지 판은 모두 200 (Spring Data·Security와 달리 3.4 짝도 남아 있음).
+- Lombok (2026-10-22): Initializr 항목의 문서 링크가 비어 있고 Boot 문서에는 기능 설명이 없어 "@Data 내부적으로 포함하는 것"에 "확인되지 않는다"로 답함. Boot 의존성 설정 Lombok 4.1.x·4.0.x 1.18.48, 3.5.x 1.18.46, 3.4.x 1.18.42, 태그 `v1.18.x` 셋 다 있음, Maven Central 최신 1.18.48. 기능 문서는 `website/templates/features/*.html`(FreeMarker, 실험 기능은 `experimental/`), 예제는 `website/usageExamples/{이름}Example_pre|post.jpage`. LICENSE는 MIT(GitHub API spdx는 NOASSERTION). projectlombok.org/features/Data 200 (최신판만 공개).
+  - 204개 항목 문서 범위: 프로젝트 문서 결합 14, Initializr 링크가 Boot 문서 62, 링크가 Boot 문서 밖 111(Spring AI 약 50, Spring Cloud 약 20, Tanzu·Azure·GCP 약 20 등), 링크 없음 18(DB 드라이버, Lombok 등. 드라이버·트레이싱은 Boot 문서에 설명 있음).
   - 판별 문서: kafka 71/71/70/70, rabbitmq 87/85/83/83, batch 64×4, session-data-redis 25/25/27/27. 문서 폴더 밖 예제 코드 include({java-examples}/…java, {samples-dir}/…xml)는 지움.
   - 대표 질문: kafka 4.0.x 재시도·DLT(Kafka 4.0 문서 6개, DefaultErrorHandler + DeadLetterPublishingRecoverer), rabbitmq 3.5.x 재시도(AMQP 3.2 문서 5개), batch 4.0.x 청크 Step(Batch 6.0 문서 7개, StepBuilder.chunk), session 3.4.x Redis 세션(Session 3.4 문서 7개).
 - 근거 확보와 답변 규칙 (2026-10-22, rag-design.md 6.1-2): Spring Kafka 문서 추가 후 kafka 4.0.x RAG가 `KafkaProperties` 패키지를 놓침 → 항목 자체 Boot 문서에서 관련도 순 3개(`own_doc_k`)를 먼저 확보. MMR 2자리로는 정답 청크를 건너뛰어 3.5.x도 틀렸음. 답변 프롬프트에 "근거에 직접 예시가 없어도 근거의 기능으로 해결 방법이 분명하면 먼저 설명" 규칙 추가 ("join sql 작성법"이 `@Query`로 커스텀 쿼리를 쓰는 방향까지 답함, 첫 문장은 여전히 "구체적으로 문서화되지 않음"). compare_rag RAG 6/6, verify 21/21.
@@ -150,7 +152,7 @@ Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문�
 
 ### 4.3-3 Spring Boot 문서 밖 항목 (2026-10-21 확인)
 items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113(그중 docs.spring.io의 다른 Spring 프로젝트 79, techdocs.broadcom.com 8 등), 링크 없음 18. 4.1.x 문서에 id·이름 문자열이 안 나오는 항목 최대 106 (단순 문자열 비교라 과대 추정). 예: springdoc-openapi(springdoc.org)는 가이드에서 좌표만 나오고 설정·import는 "확인되지 않는다".
-대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`server.py` `no_docs_notice`). 자주 쓰는 13개 항목은 프로젝트 문서를 출처로 추가 (3절, 사용자 결정 2026-10-22: 부족하면 더 추가). 나머지는 `external_docs.SOURCES`에 출처를 추가하는 방식으로 확장 가능.
+대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`server.py` `no_docs_notice`). 자주 쓰는 14개 항목은 프로젝트 문서를 출처로 추가 (3절, 사용자 결정 2026-10-22: 부족하면 더 추가). 나머지는 `external_docs.SOURCES`에 출처를 추가하는 방식으로 확장 가능.
 
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.

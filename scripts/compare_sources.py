@@ -24,6 +24,7 @@ CASES = [
     ("batch", "4.0.x", "청크 기반 Step을 만드는 방법은?", ["StepBuilder", "chunk"]),
     ("session-data-redis", "3.4.x", "사용자 이름으로 그 사용자의 세션들을 찾으려면?", ["FindByIndexNameSessionRepository"]),
     ("springdoc-openapi", "3.5.x", "Swagger UI 경로를 바꾸려면 어떤 속성을 쓰나?", ["springdoc.swagger-ui.path"]),
+    ("lombok", "4.1.x", "@Data는 내부적으로 어떤 애너테이션들을 포함하나?", ["RequiredArgsConstructor", "EqualsAndHashCode"]),
 ]
 
 

@@ -192,7 +192,7 @@ Spring Boot 4.0.x 기준, 질문하신 `Kafka 브로커`에 권장되는 JVM 힙
 
 ## 4. 외부 문서 추가 효과 (2026-10-22)
 
-재현: `python -m scripts.compare_sources`. 외부 문서 출처를 넣은 13개 항목에 질문을 하나씩 던져, 같은 질문을 **Boot 문서만** 근거로(외부 출처를 넣기 전 상태: 수집 단계가 고른 문서 중 Spring Boot 문서만) 답한 것과 **외부 문서 포함**으로 답한 것을 비교했다. 1차 판정은 정답 키워드(외부 문서 원문에서 확인한 클래스·설정 이름) 포함 여부이고, 아래 표는 답변 전문을 읽고 확정했다.
+재현: `python -m scripts.compare_sources`. 외부 문서 출처를 넣은 14개 항목에 질문을 하나씩 던져, 같은 질문을 **Boot 문서만** 근거로(외부 출처를 넣기 전 상태: 수집 단계가 고른 문서 중 Spring Boot 문서만) 답한 것과 **외부 문서 포함**으로 답한 것을 비교했다. 1차 판정은 정답 키워드(외부 문서 원문에서 확인한 클래스·설정 이름) 포함 여부이고, 아래 표는 답변 전문을 읽고 확정했다.
 
 | 항목·버전 | 질문 | Boot 문서만 | 외부 문서 포함 |
 |---|---|---|---|
@@ -209,9 +209,11 @@ Spring Boot 4.0.x 기준, 질문하신 `Kafka 브로커`에 권장되는 JVM 힙
 | oauth2-client 3.5.x | 구글 로그인 설정 | ✓ | ✓ (더 자세함) |
 | rabbitmq 3.5.x | 재시도 소진 시 메시지 처리 | ✓ | ✓ |
 | session-data-redis 3.4.x | 사용자 이름으로 세션 찾기 | ✗ | ✓ `FindByIndexNameSessionRepository`, 주체 이름 인덱스 (처음 측정 ✗) |
+| lombok 4.1.x | @Data가 포함하는 애너테이션 | ✗ (항목 소개 한 줄뿐) | ✓ `@ToString`·`@EqualsAndHashCode`·`@Getter`·`@Setter`·`@RequiredArgsConstructor` |
 
 **해석**
-- 13개 중 10개가 외부 문서로 답할 수 있게 됐고(✗/△ → ✓), security 1개는 나아졌지만 `permitAll`이 빠졌다(✗ → △). 표는 수집 후보 점수 상한과 문서 고르기 프롬프트를 고친 뒤(아래) 다시 잰 값이다. Boot 문서는 자동 구성과 설정 속성까지만 다루고, 클래스 사용법(`R2dbcEntityTemplate`, `@EntityGraph`, `DeadLetterPublishingRecoverer` 등)은 각 프로젝트 문서에 있기 때문이다.
+- 14개 중 11개가 외부 문서로 답할 수 있게 됐고(✗/△ → ✓), security 1개는 나아졌지만 `permitAll`이 빠졌다(✗ → △). 표는 수집 후보 점수 상한과 문서 고르기 프롬프트를 고친 뒤(아래) 다시 잰 값이다. Boot 문서는 자동 구성과 설정 속성까지만 다루고, 클래스 사용법(`R2dbcEntityTemplate`, `@EntityGraph`, `DeadLetterPublishingRecoverer` 등)은 각 프로젝트 문서에 있기 때문이다.
+- Lombok은 Initializr 문서 링크가 비어 있고 Boot 문서에도 기능 설명이 없어, 추가 전에는 근거가 항목 소개 한 줄뿐이었다. Lombok 행은 추가 직후 같은 스크립트로 이 항목만 잰 값이다.
 - oauth2-client, rabbitmq는 Boot 문서에 이미 해당 설정이 설명돼 있어 차이가 작다.
 - 처음 측정에서 session-data-redis는 ✗였다. 원문에 이 질문을 다룬 가이드(`guides/boot-findbyusername.adoc`)가 있는데, 수집 후보 점수가 검색어 등장 횟수의 합이라 흔한 검색어("spring session")가 긴 문서에서 점수를 독차지해 가이드가 후보 10개 밖으로 밀렸다. 검색어 하나의 본문 횟수를 10까지만 세고(`term_cap`), 문서 고르기 프롬프트에 "프로젝트 문서도 고를 수 있다, 주제를 제목으로 직접 다룬 가이드를 먼저"를 넣은 뒤 ✓가 됐다. mongodb도 △ → ✓.
 

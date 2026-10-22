@@ -63,8 +63,8 @@ graph TD;
 |---|---|---|
 | F2013 화면이 HTML·CSS·JS로 동작하고 질문·답변·근거가 모두 표시된다 | 통과 | `server.py`(FastAPI) + `web/`. 캡처 ① (질문, 진행 단계, 답변, 근거 목록) |
 | F2014 유사도 검색과 MMR의 근거 목록 차이 | 통과 | rag-design.md 6.1 (5개 질문 비교, `python -m scripts.compare_search`) |
-| F2015 대표 질문의 RAG 사용 전후 답변을 나란히 확보 | 통과 | rag-comparison.md (6개 질문, 답변 전문 포함). 4절은 외부 문서 추가 전후 13개 질문 |
-| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 13개 항목에 프로젝트 문서 결합 (`data_prep/external_docs.py`), 효과는 rag-comparison.md 4절 (13개 중 10개 개선). 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑤b의 `Spring Boot 4.0.x 문서`·`Initializr 의존성 좌표`와 구분됨 |
+| F2015 대표 질문의 RAG 사용 전후 답변을 나란히 확보 | 통과 | rag-comparison.md (6개 질문, 답변 전문 포함). 4절은 외부 문서 추가 전후 14개 질문 |
+| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 14개 항목에 프로젝트 문서 결합 (`data_prep/external_docs.py`), 효과는 rag-comparison.md 4절 (14개 중 11개 개선). 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑤b의 `Spring Boot 4.0.x 문서`·`Initializr 의존성 좌표`와 구분됨 |
 
 ## 4.6 RAG 사용 전후 품질 비교
 
@@ -92,7 +92,7 @@ graph TD;
 | 확인 항목 | 결과 | 비고 |
 |---|---|---|
 | 필수 기능 F2001~F2012가 모두 동작한다 | 통과 | 4.1~4.4, 캡처 ①~⑦ |
-| 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(13개 항목, rag-comparison.md 4절) |
+| 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(14개 항목, rag-comparison.md 4절) |
 | 증명용 스크린샷을 모두 첨부했다 | 통과 (재촬영 예정) | 아래 캡처 목록 (10장). 이후 화면이 바뀌어 최종 UI로 다시 찍는다 |
 | 요구사항 정의서·설계문서·소스코드·README.md 포함 | 통과 | `docs/requirements.md`, `docs/rag-design.md`, 소스, `README.md` |
 | 검증 결과(요구사항 대조표, 테스트 결과표, 셀프·상호 체크리스트) 포함 | 일부 | 이 문서(대조표·결과표·셀프 체크). 상호 점검은 옆 교육생이 같은 체크리스트로 진행 |

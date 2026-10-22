@@ -1,9 +1,10 @@
-"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data, Security, Kafka, AMQP, Batch, Session. (F2016 일부)
+"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data, Security, Kafka, AMQP, Batch, Session, Lombok. (F2016 일부)
 
 항목 id가 SOURCES에 있으면, 그 항목의 질문 시점 수집에서 이 문서도 후보로 검색한다.
 Boot 버전마다 호환되는 판(브랜치·폴더)의 문서를 쓴다 (progress.md 3절).
 원문은 data/external_docs/{저장소}/{브랜치}/에 받는다. 같은 저장소를 쓰는 출처는 사본을 함께 쓴다.
 """
+import html
 import re
 from fnmatch import fnmatch
 from pathlib import Path
@@ -128,6 +129,15 @@ SOURCES = {
     "batch": _project("Spring Batch", "spring-batch", "spring-batch-docs/modules/ROOT", ("6.0.5", "6.0.5", "5.2.6", "5.2.6")),
     "session-data-redis": _project("Spring Session", "spring-session", "spring-session-docs/modules/ROOT",
                                    ("4.1.1", "4.0.5", "3.5.7", "3.4.7")),
+    # Lombok 웹사이트의 기능 문서 (FreeMarker HTML 템플릿, 예제 코드는 usageExamples/). 판은 Boot 의존성 설정의 Lombok 값
+    # 4.1.x·4.0.x 1.18.48, 3.5.x 1.18.46, 3.4.x 1.18.42 = 릴리스 태그 (2026-10-22 확인). 사이트는 최신판(1.18.48)만 보여 준다
+    "lombok": {
+        "repo": "projectlombok/lombok", "root": "website/templates/features", "license": "MIT", "ext": ".html",
+        "editions": {boot: {"branch": f"v{v}", "pages": ["*.html", "experimental/*.html"], "page_urls": True,
+                            "url": "https://projectlombok.org/features/" if v == "1.18.48" else None,
+                            "label": f"Lombok {v} 문서"}
+                     for boot, v in [("4.1.x", "1.18.48"), ("4.0.x", "1.18.48"), ("3.5.x", "1.18.46"), ("3.4.x", "1.18.42")]},
+    },
 }
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
@@ -168,9 +178,33 @@ def _include_target(target: str, repo: str, branch: str, path: str) -> tuple[str
     return None  # 예: springdoc의 광고 조각 {docdir}/_ad-in-article.adoc. 줄은 그대로 둔다
 
 
+def _freemarker(repo: str, branch: str, text: str, fetch: bool) -> str:
+    """Lombok 기능 문서 템플릿을 AsciiDoc 모양의 글로 바꾼다. 매크로는 헤더로, 예제 매크로는 코드 블록으로 바꾸고 HTML 태그는 걷어낸다."""
+    def snippets(m):
+        pre, post = (_read(repo, branch, f"website/usageExamples/{m[1]}Example_{k}.jpage", fetch) or "" for k in ("pre", "post"))
+        return f"\n== With Lombok\n\n----\n{pre.strip()}\n----\n\n== Vanilla Java\n\n----\n{post.strip()}\n----\n"
+    headings = {"overview": "Overview", "experimental": "Experimental", "confKeys": "Supported configuration keys",
+                "smallPrint": "Small print", "history": "History"}
+    text = re.sub(r'<@f\.scaffold title="([^"]*)"\s+logline="([^"]*)"[^>]*>', "= \\1\n\n\\2\n", text)
+    text = re.sub(r"<@f\.(\w+)>", lambda m: f"\n== {headings[m[1]]}\n" if m[1] in headings else "", text)
+    text = re.sub(r'<@main\.h(\d) title="([^"]*)"\s*/>', lambda m: f"\n{'=' * int(m[1])} {m[2]}\n", text)
+    text = re.sub(r"</?[#@](?!f\.snippets)[^>]*>", "", text)  # 남은 FreeMarker 지시문
+    text = re.sub(r"(?i)</?pre[^>]*>", "\n----\n", text)
+    text = re.sub(r"(?i)</?(p|br|div|dl|ol|ul)\b[^>]*>", "\n\n", text)
+    text = re.sub(r"(?i)<li[^>]*>", "\n* ", text)
+    text = re.sub(r"(?i)<dd[^>]*>", "\n", text)
+    text = re.sub(r"(?i)</?code>", "`", text)
+    text = html.unescape(re.sub(r"<(?!@f\.snippets)[^>]+>", "", text))
+    text = "\n".join(line.strip() for line in text.split("\n"))  # 템플릿 들여쓰기 제거 (예제 코드는 아래에서 넣는다)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return re.sub(r'<@f\.snippets name="([^"]+)"\s*/>', snippets, text).strip() + "\n"
+
+
 def _expand(repo: str, branch: str, path: str, fetch: bool, commons_branch: str | None = None, depth: int = 0,
             defs: dict[str, str] | None = None) -> str:
     text = _read(repo, branch, path, fetch) or ""
+    if path.endswith(".html"):
+        return _freemarker(repo, branch, text, fetch)
     if depth > 5:
         return text
     # include 경로가 문서 속성일 수 있다 (예: :vector-search-intro-include: partial$...). 상위 문서의 정의도 물려받는다
@@ -214,11 +248,11 @@ def _pages(s: dict, edition: dict, paths: list[str]) -> list[str]:
     """원문 경로 중 이 판의 본문 페이지. 패턴의 *는 한 폴더 안, **는 하위 폴더까지.
     밑줄 조각, nav, 최상위 index(목차 묶음)는 본문이 아니다. 하위 폴더의 index는 본문이다 (예: servlet/oauth2/index.adoc)."""
     root = s["root"] + "/"
-    rels = [p.removeprefix(root) for p in paths if p.startswith(root) and p.endswith(".adoc")]
+    rels = [p.removeprefix(root) for p in paths if p.startswith(root) and p.endswith(s.get("ext", ".adoc"))]
     return sorted(r for r in rels if any(fnmatch(r, pat) and ("**" in pat or "/" not in r.removeprefix(pat.split("*")[0]))
                                          for pat in edition["pages"])
                   and not r.rsplit("/", 1)[-1].startswith("_") and r.rsplit("/", 1)[-1] != "nav.adoc"
-                  and not (r.endswith("index.adoc") and r.count("/") <= 1))
+                  and not (r.endswith(f"index{s.get('ext', '.adoc')}") and r.count("/") <= 1))
 
 
 def download(source: str) -> int:
@@ -256,7 +290,7 @@ def load(source: str, version: str) -> dict[str, str]:
     if not edition:
         return {}
     base = _local(s["repo"], edition["branch"], s["root"])
-    paths = [f"{s['root']}/{p.relative_to(base).as_posix()}" for p in base.rglob("*.adoc")] if base.exists() else []
+    paths = [f"{s['root']}/{p.relative_to(base).as_posix()}" for p in base.rglob(f"*{s.get('ext', '.adoc')}")] if base.exists() else []
     docs = {}
     for rel in _pages(s, edition, paths):
         attrs = dict(_attributes(source, edition))  # 본문 속성 정의(:이름: 값)가 다른 문서로 새지 않게 문서마다 복사한다
@@ -275,5 +309,6 @@ def describe(doc_id: str, version: str) -> dict:
     repo_url = f"https://github.com/{s['repo']}/blob/{edition['branch']}/{s['root']}/{rel}"
     url = edition["url"]
     if url and edition["page_urls"]:
-        url += rel.removeprefix("pages/").removesuffix(".adoc") + ".html"
+        page = rel.removeprefix("pages/").removesuffix(s.get("ext", ".adoc"))
+        url += page if s.get("ext") == ".html" else page + ".html"  # Lombok 사이트 주소는 확장자가 없다 (/features/Data)
     return {"source_url": url or repo_url, "repo_url": repo_url, "source_type": edition["label"], "license": s["license"]}

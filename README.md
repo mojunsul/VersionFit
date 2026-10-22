@@ -15,7 +15,7 @@ Spring Initializr 의존성과 Spring Boot 버전을 고르면, **그 버전의 
 | 심화 | 프론트엔드 직접 구현 (F2013) | FastAPI + HTML·CSS·JS, 진행 상태 SSE, (항목, 버전)별 대화 저장 |
 | 심화 | MMR 검색 (F2014) | 비슷한 섹션 반복을 줄이는 MMR을 기본 검색으로, 유사도 검색과 비교 |
 | 심화 | RAG 전후 비교 (F2015) | 대표 질문을 LLM만 / RAG로 답해 사실 정확성·근거 제시·모름 응답 비교 |
-| 심화 | 프로젝트 문서 결합 (F2016) | 자주 쓰는 13개 의존성은 Spring Boot 문서에 더해 그 프로젝트의 공식 문서(Spring Data, Security, Kafka 등)를 Boot 버전에 맞는 판으로 함께 근거로 쓴다 ([효과 비교](docs/rag-comparison.md)) |
+| 심화 | 프로젝트 문서 결합 (F2016) | 자주 쓰는 14개 의존성은 Spring Boot 문서에 더해 그 프로젝트의 공식 문서(Spring Data, Security, Kafka, Lombok 등)를 Boot 버전에 맞는 판으로 함께 근거로 쓴다 ([효과 비교](docs/rag-comparison.md)) |
 | 추가 | 일반 지식 답변 | 문서에 답이 없을 때 버튼을 누르면 LLM 일반 지식으로 답하고, "문서 근거 없음"으로 구분해 표시. 문서 기반 답변은 그대로 둔다 |
 
 출처와 라이선스는 [아래 절](#출처와-라이선스), 수집 시 확인한 이용 조건은 [requirements.md 1.1](docs/requirements.md).
@@ -38,7 +38,7 @@ copy .env.example .env                          # GMS_KEY 입력
 ## 데이터 준비와 색인
 
 1. **항목 색인** (`scripts.build_items`): Initializr 메타데이터 API에서 의존성 204건을 받아 `data/items.json`에 저장하고, 항목마다 "이름·id·분류·설명·문서 링크" 텍스트 1청크로 `items` 컬렉션에 색인한다 (청크 ID = 항목 id라 다시 실행해도 늘지 않는다).
-2. **문서 원문 수집** (`scripts.fetch_docs`): GitHub에서 Boot 버전별 Spring Boot 레퍼런스 문서(`data/boot_docs/`)와 13개 항목의 프로젝트 문서(`data/external_docs/`)를 받는다. 1초 간격, 이미 받은 파일은 건너뛴다.
+2. **문서 원문 수집** (`scripts.fetch_docs`): GitHub에서 Boot 버전별 Spring Boot 레퍼런스 문서(`data/boot_docs/`)와 14개 항목의 프로젝트 문서(`data/external_docs/`)를 받는다. 1초 간격, 이미 받은 파일은 건너뛴다.
 3. **질문 시점 수집·색인**: 질문이 오면 검색어 추출(프롬프트1) → 원문 사본에서 후보 10개 → 후보 선별(프롬프트2, 최대 3개 + 항목 자체 문서) → 헤더 단위 청킹 → `docs` 컬렉션 색인. 같은 질문과 검색어는 `data/collect_log.json` 캐시로 다시 수집하지 않는다.
 4. **답변**: LangGraph `retrieve`(항목 정보 + 질문별 문서 근거) → `generate`(근거 기반 답변, `[근거 N]`).
 
@@ -51,7 +51,7 @@ copy .env.example .env                          # GMS_KEY 입력
 | F2013 | 프론트엔드 직접 구현 | FastAPI(`server.py`) + HTML·CSS·JS(`web/`), 진행 상태는 SSE | 화면 캡처 ([검증 결과](docs/verification.md)) |
 | F2014 | MMR 검색 | 기본 검색 방식 MMR (fetch_k 30, lambda_mult 0.6) | 유사도 검색과 비교 ([설계문서 6.1](docs/rag-design.md)) |
 | F2015 | RAG 전후 비교 | 대표 질문 6개를 LLM만 / RAG로 답해 3개 기준 비교 | 사실 정확성 2/5 → 5/5, 근거 0/5 → 5/5, 모름 0/2 → 2/2 ([비교](docs/rag-comparison.md)) |
-| F2016 | 여러 문서 출처 결합 | Spring Boot 문서 + 13개 항목의 프로젝트 문서, 근거에 출처 종류·판 표시 | 13개 질문 중 10개 개선 ([비교 4절](docs/rag-comparison.md)) |
+| F2016 | 여러 문서 출처 결합 | Spring Boot 문서 + 14개 항목의 프로젝트 문서, 근거에 출처 종류·판 표시 | 14개 질문 중 11개 개선 ([비교 4절](docs/rag-comparison.md)) |
 
 ## 구조
 
@@ -69,7 +69,7 @@ copy .env.example .env                          # GMS_KEY 입력
 
 ## 출처와 라이선스
 
-답변 근거는 아래 공개 저장소의 문서를 Boot 버전에 맞는 브랜치에서 받아 쓴다. 모두 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)이며, 저작권은 각 저장소의 원저작자에게 있다.
+답변 근거는 아래 공개 저장소의 문서를 Boot 버전에 맞는 브랜치(태그)에서 받아 쓴다. Lombok은 [MIT License](https://github.com/projectlombok/lombok/blob/master/LICENSE)(Copyright (C) 2009-2021 The Project Lombok Authors), 나머지는 모두 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)이며, 저작권은 각 저장소의 원저작자에게 있다.
 
 | 출처 | 저장소 | 쓰는 곳 |
 |---|---|---|
@@ -85,10 +85,11 @@ copy .env.example .env                          # GMS_KEY 입력
 | Spring AMQP | [spring-projects/spring-amqp](https://github.com/spring-projects/spring-amqp) | rabbitmq |
 | Spring Batch | [spring-projects/spring-batch](https://github.com/spring-projects/spring-batch) | batch |
 | Spring Session | [spring-projects/spring-session](https://github.com/spring-projects/spring-session) | session-data-redis |
+| Lombok 기능 문서 | [projectlombok/lombok](https://github.com/projectlombok/lombok) (`website/`, MIT) | lombok |
 | springdoc-openapi 문서 | [springdoc/springdoc.github.io](https://github.com/springdoc/springdoc.github.io) | springdoc-openapi |
 | Initializr 메타데이터 | [start.spring.io](https://start.spring.io) ([spring-io/start.spring.io](https://github.com/spring-io/start.spring.io)) | 의존성 목록, 버전별 좌표 |
 
-- **수정 고지**: 원문 AsciiDoc을 그대로 보여 주지 않는다. 매크로(`javadoc:`, `xref:` 등)를 글로 바꾸고, include와 조건 블록을 풀고, 헤더 단위로 잘라(청크) 답변 근거로 일부만 보여 준다. 근거마다 원문 링크를 붙인다.
+- **수정 고지**: 원문 AsciiDoc(Lombok은 HTML 템플릿)을 그대로 보여 주지 않는다. 매크로(`javadoc:`, `xref:` 등)를 글로 바꾸고, include와 조건 블록을 풀고, 헤더 단위로 잘라(청크) 답변 근거로 일부만 보여 준다. 근거마다 원문 링크를 붙인다.
 - 원문 사본(`data/boot_docs/`, `data/external_docs/`)은 저장소에 포함하지 않는다. `python -m scripts.fetch_docs`로 각자 받는다.
 - 확인한 저장소에는 NOTICE 파일이 없다 (2026-10-22).
 
