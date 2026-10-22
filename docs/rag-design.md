@@ -3,7 +3,7 @@
 ## 1. 구성
 
 ```
-[scripts: 배치]  build_items -> items 컬렉션        fetch_docs -> data/boot_docs/ (원문 사본)
+[scripts: 배치]  build_items -> items 컬렉션        fetch_docs -> data/boot_docs/, data/external_docs/ (원문 사본)
 
 [data_prep]  Initializr API -> items.json     GitHub API -> 원문 사본, 매크로 정리, 후보 검색
      |                                              |
@@ -27,7 +27,7 @@
 
 ### docs (RAG 2)
 - 청크 ID = `항목ID:버전:문서ID:순번` (여러 항목이 같은 문서를 수집해도 덮어쓰지 않음)
-- 메타데이터: `item_id`, `boot_version`, `doc_title`, `doc_id`(Antora 모듈 기준 상대 경로, 예: `reference/pages/messaging/kafka.adoc`), `source_url`(원문 링크: docs.spring.io 또는 springdoc.org 판별 페이지), `repo_url`(GitHub 파일), `query`(수집에 쓴 검색어), `license`("Apache-2.0"), `source_type`(Boot 문서는 코드값 "boot-reference", 외부 문서는 표시 이름 "springdoc-openapi 3.x 문서" 등), `collected_at`
+- 메타데이터: `item_id`, `boot_version`, `doc_title`, `doc_id`(Antora 모듈 기준 상대 경로, 예: `reference/pages/messaging/kafka.adoc`), `source_url`(원문 링크: docs.spring.io·springdoc.org 판별 페이지, 공식 사이트에서 내려간 판은 GitHub 파일), `repo_url`(GitHub 파일), `query`(수집에 쓴 검색어), `license`("Apache-2.0"), `source_type`(Boot 문서는 코드값 "boot-reference", 외부 문서는 표시 이름 "springdoc-openapi 3.x 문서", "Spring Data JPA 4.0 문서" 등), `collected_at`
 - 검색 필터: `item_id`와 `boot_version`. 이 필터가 빠지면 다른 항목·버전의 문서가 섞인다.
 
 ## 3. 수집·청킹·색인 흐름 (F2003~F2005)
@@ -39,8 +39,8 @@
 **질문 시점**
 1. 프롬프트1: 항목과 질문에서 검색어 JSON 배열 추출. 항목 이름은 항상 포함.
 2. 캐시 확인 (`data/collect_log.json`): 같은 (항목, 버전, 질문)이면 저장된 검색어를 쓰고 프롬프트1을 건너뜀. (항목, 버전, 검색어)가 모두 수집됐으면 수집 전체를 건너뜀.
-3. 후보 수집: 해당 버전 로컬 사본(122~128개, 외부 문서 출처가 있으면 15~16개 추가)에서 검색어가 경로·본문에 나오는 횟수로 후보 10개(`collect.candidates`)를 추림. 경로 일치는 문서 주제이므로 가중치를 크게 준다(20배).
-4. 프롬프트2: 후보의 제목과 경로만 LLM에 보여 색인할 문서를 최대 3개(`collect.max_docs`) 선별. 항목의 `doc_url`이 가리키는 문서는 선별과 무관하게 항상 포함.
+3. 후보 수집: 해당 버전 로컬 사본(122~128개, 외부 문서 출처가 있으면 출처에 따라 15~190개 추가)에서 검색어가 경로·본문에 나오는 횟수로 후보 10개(`collect.candidates`)를 추림. 경로 일치는 문서 주제이므로 가중치를 크게 준다(20배). 본문 횟수는 검색어마다 `collect.term_cap`(10)까지만 센다 (9절).
+4. 프롬프트2: 후보의 제목과 경로만 LLM에 보여 색인할 문서를 최대 3개(`collect.max_docs`) 선별. Boot 문서와 항목의 프로젝트 문서 중에서 고르고, 주제를 제목으로 직접 다룬 가이드를 먼저 고른다. 항목의 `doc_url`이 가리키는 문서는 선별과 무관하게 항상 포함.
 5. 본문 정리: 앵커 줄 제거, `javadoc:`은 패키지 전체 이름(`[format=annotation]`이면 `@` 붙임), `configprop:`은 속성 이름, `xref:`는 표시문(없으면 앵커), 따옴표 문법 `"`...`"`은 `"..."`로 바꿈. 코드 블록 보존.
 6. 청킹: 헤더 단위로 나눈 뒤 청크 크기·중복 설정으로 분할, 코드 블록은 중간에 자르지 않음.
 7. 임베딩(`text-embedding-3-small`) 후 `docs` 컬렉션에 저장.
@@ -62,7 +62,7 @@
 |---|---|---|
 | 1 검색어 추출 | "Spring 기술 문서 전문가"로서 항목·질문에서 문서 검색어 추출 | JSON 배열만 |
 | 2 후보 선별 | 후보(제목·경로) 중 색인할 문서 선택 | 선택한 인덱스 JSON 배열 |
-| 3 답변 생성 | 근거 문서의 내용만 사용, 없으면 "문서에서 확인되지 않는다", 주장 뒤에 `[근거 N]`, 선택한 버전을 명시, 물음이 여럿이면 나눠 답함, `a.b.Class`에서 패키지 읽기 | 마크다운 |
+| 3 답변 생성 | 근거 문서의 내용만 사용, 없으면 "문서에서 확인되지 않는다", 직접 예시가 없어도 근거의 기능으로 해결 방법이 분명하면 먼저 설명, 주장 뒤에 `[근거 N]`, 선택한 버전을 명시, 물음이 여럿이면 나눠 답함, `a.b.Class`에서 패키지 읽기 | 마크다운 |
 
 명세의 프롬프트 3개 외에 특화 기능용으로 다음을 쓴다 (모두 `rag/prompts.py`).
 
@@ -71,6 +71,7 @@
 | `GUIDE_QUESTION` | 가이드(F2010)용 고정 질문. 프롬프트3에 질문으로 넣는다 | (프롬프트3과 같음) |
 | `EXPLORE_QUERY` | 조건 탐색(F2011): 한국어 조건 → 영어 검색 문장 (항목 설명이 영어) | 한 줄 |
 | `EXPLORE_SELECT` | 조건 탐색: 후보 30개 중 조건에 맞는 항목과 이유 | `[{"id", "reason"}]` JSON |
+| `GENERAL` | 일반 지식 답변: 문서 근거 없이 답하고, 버전에 따라 다를 수 있는 부분을 표시 | 마크다운 |
 
 ## 6. 설정 (`config.toml`)
 
@@ -80,6 +81,8 @@
 | Top-k | 8 (항목 메타 1 + 문서 청크) | 검증 단계에서 조정 |
 | 검색 방식 | ~~similarity~~ → **mmr** (fetch_k 30, lambda_mult ~~0.5~~ → 0.6) | 6.1 비교에서 정답 근거를 앞당기고 중복 섹션을 줄임 (2026-10-22 변경) |
 | 수집 후보 / 선별 수 | 10 / 3 | 프롬프트2에 보여 줄 후보와 질문 한 번에 새로 색인할 최대 문서 수 |
+| 후보 점수 상한 `term_cap` | 10 | 흔한 검색어가 긴 문서에서 후보 점수를 독차지하지 않게 (9절) |
+| Boot 문서 우선 근거 `own_doc_k` | 3 | 프로젝트 문서가 근거를 모두 차지해 버전별 차이가 빠지지 않게 (6.1-2) |
 | 탐색 후보 / 결과 수 | 30 / 8 | 조건 탐색의 items 후보와 카드 수 |
 | 답변 모델 | ~~gpt-5.4-nano~~ → **gpt-5.4-mini** | 6.2 비교. 임베딩은 `text-embedding-3-small` (1536차원) |
 

@@ -4,7 +4,7 @@
 
 - 자동 확인 재현: `python -m scripts.verify` (아래 ✅ 자동 표시 항목 21개, 2026-10-22 실행 21/21 통과)
 - 설정을 바꾸는 실험(청크 크기, Top-k)과 키 없음·색인 없음 상태는 스크립트 안에서만 흉내 내고 `config.toml`, `chroma_db`는 바꾸지 않는다.
-- 모델 `gpt-5.4-mini`, 검색 `mmr`(lambda_mult 0.6, 질문별 수집 문서 범위), 청크 1000/200, Top-k 8
+- 모델 `gpt-5.4-mini`, 검색 `mmr`(lambda_mult 0.6, 질문별 수집 문서 범위, 질의에 영어 검색어 추가, 항목 자체 Boot 문서 3개 우선), 수집 후보 점수 `term_cap` 10, 청크 1000/200, Top-k 8
 
 ## 4.1 데이터와 색인 (F2001~F2002)
 
@@ -33,7 +33,7 @@
 | Top-k를 바꾸면 근거 목록이 달라진다 | 통과 ✅ | top_k 4 → 근거 4개, 8 → 8개 (항목 정보 1 + 문서) |
 | LangGraph가 retrieve·generate 두 노드다 | 통과 ✅ | 아래 그래프 구조 출력 |
 | 답변 본문의 근거 번호와 화면의 근거 목록이 일치한다 | 통과 | 캡처 ①(본문 [근거 4] ↔ 목록 [근거 4]), ⑤b(본문 [근거 2~9] ↔ 목록 8건). 로직: `web/app.js` `citedSources` (본문의 `[근거 N]`만 목록에 표시) |
-| 근거 목록에 항목 메타데이터와 외부 문서가 구분 표시된다 | 통과 | 캡처 ⑤b(`Initializr 의존성 좌표 (4.0.8.RELEASE)`와 `Spring Boot 4.0.x 문서`가 함께), ①(`springdoc-openapi 3.x 문서`). 출처 유형: `Initializr 항목 정보`, `Initializr 의존성 좌표`, `Spring Boot {버전} 문서`, `springdoc-openapi {판} 문서` |
+| 근거 목록에 항목 메타데이터와 외부 문서가 구분 표시된다 | 통과 | 캡처 ⑤b(`Initializr 의존성 좌표 (4.0.8.RELEASE)`와 `Spring Boot 4.0.x 문서`가 함께), ①(`springdoc-openapi 3.x 문서`). 출처 유형: `Initializr 항목 정보`, `Initializr 의존성 좌표`, `Spring Boot {버전} 문서`, 프로젝트 문서(`springdoc-openapi 3.x 문서`, `Spring Data JPA 4.0 문서`, `Spring Security 7.0 문서` 등) |
 | 문서에 없는 것을 물으면 확인되지 않는다고 답한다 | 통과 ✅ | "Kafka 브로커에 권장되는 JVM 힙 메모리 크기는?" → "문서에서 확인되지 않는다" (rag-comparison.md 6번도 같음) |
 | (추가 기능) 문서에 답이 없을 때 요청하면 일반 지식 답변을 따로 준다 | 통과 ✅ | 답이 "확인되지 않"을 포함하거나 인용 근거가 없으면 "💡 일반 지식으로 답변 보기" 버튼. 누르면 `/api/general`이 근거 없이 답하고, 화면은 "⚠ 문서 근거 없음" 칸에 따로 표시. 문서 기반 답변(F2007)은 바뀌지 않음 |
 | 인용된 근거가 없으면 화면에 안내된다 | 통과 | 캡처 ②("안녕하세요" → "ⓘ 답변에 인용된 근거가 없습니다."). 로직: `renderSources` → "ⓘ 답변에 인용된 근거가 없습니다." |
@@ -62,8 +62,8 @@ graph TD;
 |---|---|---|
 | F2013 화면이 HTML·CSS·JS로 동작하고 질문·답변·근거가 모두 표시된다 | 통과 | `server.py`(FastAPI) + `web/`. 캡처 ① (질문, 진행 단계, 답변, 근거 목록) |
 | F2014 유사도 검색과 MMR의 근거 목록 차이 | 통과 | rag-design.md 6.1 (5개 질문 비교, `python -m scripts.compare_search`) |
-| F2015 대표 질문의 RAG 사용 전후 답변을 나란히 확보 | 통과 | rag-comparison.md (6개 질문, 답변 전문 포함) |
-| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑤b의 `Spring Boot 4.0.x 문서`·`Initializr 의존성 좌표`와 구분됨 |
+| F2015 대표 질문의 RAG 사용 전후 답변을 나란히 확보 | 통과 | rag-comparison.md (6개 질문, 답변 전문 포함). 4절은 외부 문서 추가 전후 13개 질문 |
+| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 13개 항목에 프로젝트 문서 결합 (`data_prep/external_docs.py`), 효과는 rag-comparison.md 4절 (13개 중 10개 개선). 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑤b의 `Spring Boot 4.0.x 문서`·`Initializr 의존성 좌표`와 구분됨 |
 
 ## 4.6 RAG 사용 전후 품질 비교
 
@@ -83,16 +83,16 @@ graph TD;
 | NF2003 소스와 제출물에 API 키가 없다 | 통과 ✅ | `load_dotenv()`로 불러온 키 값으로 git 전체 이력(`git log -p --all`)과 추적 파일 검색 0건, `.env`는 gitignore |
 | NF2004 화면에 API 키·프롬프트 전문·오류 추적이 노출되지 않는다 | 통과 ✅ | 내부 오류를 일부러 내면 `/api/ask`는 `error` 이벤트로 짧은 안내만, `/api/explore`는 502 + 짧은 안내. 추적은 서버 콘솔에만. 화면에는 프롬프트를 보내지 않는다 |
 | NF2005 수집·색인·검색·생성·UI 모듈 분리 | 통과 | `data_prep/`(수집) · `vector_store/`(청킹·색인) · `rag/`(검색·생성) · `services/`(특화) · `server.py`+`web/`(UI). 의존 방향 CLAUDE.md |
-| NF2006 외부 호출 재시도·간격·식별 정보 | 통과 | `data_prep/boot_docs.py` `http_get`: 1.1초 간격, 3회 재시도(5xx·네트워크), GitHub 한도 초과 안내, User-Agent `ssafy-rag-project/0.1 (student project)`. Initializr 호출도 같은 User-Agent, 연속 호출 사이 1.1초 |
-| NF2007 데이터와 문서의 출처·이용 조건 기록 | 통과 | requirements.md 1.1 (start.spring.io, spring-boot, springdoc, GitHub API, docs.spring.io) |
+| NF2006 외부 호출 재시도·간격·식별 정보 | 통과 | `data_prep/boot_docs.py` `http_get`: 1.1초 간격, 3회 재시도(5xx·네트워크), GitHub 한도 초과 안내(Trees API 결과는 `.tree.json`으로 캐시해 다시 부르지 않음), User-Agent `ssafy-rag-project/0.1 (student project)`. Initializr 호출도 같은 User-Agent, 연속 호출 사이 1.1초 |
+| NF2007 데이터와 문서의 출처·이용 조건 기록 | 통과 | requirements.md 1.1 (start.spring.io, spring-boot, 프로젝트 문서 저장소, GitHub API, docs.spring.io), README "출처와 라이선스"(저장소 14곳, Apache-2.0, 수정 고지), 화면 사이드바 하단 고지 |
 
 ## 4.8 제출 전 점검
 
 | 확인 항목 | 결과 | 비고 |
 |---|---|---|
 | 필수 기능 F2001~F2012가 모두 동작한다 | 통과 | 4.1~4.4, 캡처 ①~⑦ |
-| 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(springdoc) |
-| 증명용 스크린샷을 모두 첨부했다 | 통과 | 아래 캡처 목록 (10장) |
+| 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(13개 항목, rag-comparison.md 4절) |
+| 증명용 스크린샷을 모두 첨부했다 | 통과 (재촬영 예정) | 아래 캡처 목록 (10장). 이후 화면이 바뀌어 최종 UI로 다시 찍는다 |
 | 요구사항 정의서·설계문서·소스코드·README.md 포함 | 통과 | `docs/requirements.md`, `docs/rag-design.md`, 소스, `README.md` |
 | 검증 결과(요구사항 대조표, 테스트 결과표, 셀프·상호 체크리스트) 포함 | 일부 | 이 문서(대조표·결과표·셀프 체크). 상호 점검은 옆 교육생이 같은 체크리스트로 진행 |
 
@@ -127,5 +127,6 @@ graph TD;
 | F2013 프론트엔드 직접 구현 | `server.py`, `web/` | 4.5 |
 | F2014 MMR | `config.toml` `search.mode`, `scripts/compare_search.py` | 4.5, rag-design.md 6.1 |
 | F2015 RAG 전후 비교 | `scripts/compare_rag.py`, `docs/rag-comparison.md` | 4.6 |
-| F2016 여러 문서 출처 결합 | `data_prep/external_docs.py` (springdoc) | 4.5 |
+| F2016 여러 문서 출처 결합 | `data_prep/external_docs.py` (springdoc, Spring Data, Security, Kafka, AMQP, Batch, Session), `scripts/compare_sources.py` | 4.5 |
+| (추가) 일반 지식 답변 | `rag/graph.py` `general`, `rag/prompts.py` `GENERAL`, `server.py` `/api/general`, `web/app.js` | 4.3 |
 | NF2001~NF2007 | 4.7 표 | 4.7 |

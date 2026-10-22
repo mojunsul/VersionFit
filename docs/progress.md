@@ -1,6 +1,6 @@
 # 진행 상황 (에이전트 인수인계용)
 
-마지막 갱신: 2026-10-21 (1일차)
+마지막 갱신: 2026-10-22 (2일차)
 
 ## 1. 요구사항별 상태
 
@@ -11,7 +11,7 @@
 | F2003 | 검색어 추출(프롬프트1) | 완료 | `rag/prompts.py` `SEARCH_TERMS`, `rag/collect.py` `extract_terms` |
 | F2004 | 외부 문서 수집(프롬프트2) | 완료 | 원문 `data_prep/boot_docs.py`, `scripts/fetch_docs.py` / 선별·캐시 `rag/collect.py` |
 | F2005 | 외부 문서 색인 | 완료 | `vector_store/chunking.py`, `rag/collect.py` `collect()` |
-| F2006 | 근거 검색·병합 | 완료 | `rag/graph.py` `retrieve` (items 항목 청크 항상 + docs 항목·버전 필터 검색, 중복 제거) |
+| F2006 | 근거 검색·병합 | 완료 | `rag/graph.py` `retrieve` (items 항목 청크 항상 + docs 항목·버전·질문별 문서 필터, 질의에 영어 검색어, Boot 문서 3개 우선, 중복 제거) |
 | F2007 | LangGraph 답변 생성 | 완료 | `rag/graph.py` `generate`, `answer()`. 아래 4.3 답변 품질 한계 |
 | F2008 | 근거 표시 | 완료 | `web/app.js` `citedSources`/`renderSources` |
 | F2009 | 항목·버전 선택, 대화 분리 | 완료 | `web/` 사이드바, localStorage `chat:{항목}|{버전}` |
@@ -20,7 +20,7 @@
 | F2012 | 진행 상태·안내 | 완료 | `collect(on_step=)` → `server.py` SSE `step` → 화면 진행 박스. 키 누락·items 0건·원문 없음·문서 근거 없음(`no_docs_notice`)·오류 안내 |
 | F2014 | 심화: MMR | 완료 | 기본 검색 방식 mmr, lambda_mult 0.6 (`config.toml`), 비교 `scripts/compare_search.py` → rag-design.md 6.1 |
 | F2015 | 심화: RAG 전후 비교 | 완료 | `docs/rag-comparison.md`, `scripts/compare_rag.py` (mini, 6문항) |
-| F2016 | 심화: 여러 문서 출처 결합 | 일부 | springdoc-openapi 문서 추가 (`data_prep/external_docs.py`). 다른 외부 문서는 미착수 |
+| F2016 | 심화: 여러 문서 출처 결합 | 완료 | 13개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·mongodb·elasticsearch, security, oauth2-client, kafka, rabbitmq, batch, session-data-redis)에 프로젝트 문서 결합 (`data_prep/external_docs.py`). 효과 rag-comparison.md 4절 |
 | F2013 | 심화: HTML 프론트 | 완료 | `server.py` + `web/` (Streamlit `app.py` 삭제) |
 
 1일차 마감(도메인 확정, 16시)용 요구사항 정의서는 작성 완료. RAG 설계문서는 초안이며 구현하면서 채운다 (값 변경 비교, 겪은 문제).
@@ -150,15 +150,16 @@ Initializr가 3.x를 지원하지 않아 3.5.x/3.4.x 가이드의 좌표는 문�
 
 ### 4.3-3 Spring Boot 문서 밖 항목 (2026-10-21 확인)
 items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113(그중 docs.spring.io의 다른 Spring 프로젝트 79, techdocs.broadcom.com 8 등), 링크 없음 18. 4.1.x 문서에 id·이름 문자열이 안 나오는 항목 최대 106 (단순 문자열 비교라 과대 추정). 예: springdoc-openapi(springdoc.org)는 가이드에서 좌표만 나오고 설정·import는 "확인되지 않는다".
-대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`app.py` `no_docs_notice`). springdoc-openapi는 외부 문서 수집 추가 (3절). 나머지(docs.spring.io 79건 등)는 `external_docs.SOURCES`에 출처를 추가하는 방식으로 확장 가능 — 결정 필요.
+대응: 문서 근거가 없으면 화면에서 외부 문서 링크로 안내 (`server.py` `no_docs_notice`). 자주 쓰는 13개 항목은 프로젝트 문서를 출처로 추가 (3절, 사용자 결정 2026-10-22: 부족하면 더 추가). 나머지는 `external_docs.SOURCES`에 출처를 추가하는 방식으로 확장 가능.
 
 ### 4.4 공유 문서 중복
 여러 항목이 같은 Boot 문서를 수집하면 청크 ID(`항목ID:버전:문서ID:순번`) 때문에 항목별로 중복 저장된다. 명세 요구(덮어쓰지 않기)대로이며 용량만 늘어난다.
 
 ## 5. 다음 작업 (순서대로)
 
-1. 상호 점검(옆 교육생)
-2. push (사용자 요청 시)
+1. UI 마무리 후 화면 캡처 ①~⑦ 재촬영 + ⑧ 일반 지식 답변, ⑨ 프로젝트 문서 근거 답변 (사용자, UI가 다 끝난 뒤)
+2. 상호 점검(옆 교육생)
+3. push (사용자 요청 시)
 
 ## 6. 커밋 이력 요약
 - 기획 문서 → 라이브러리 버전·설정 → items 색인 (F2001, F2002)
