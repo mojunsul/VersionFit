@@ -117,6 +117,10 @@
 - Spring Security (2026-10-22): Boot 의존성 설정의 Spring Security 4.1.x 7.1.2-SNAPSHOT, 4.0.x 7.0.8-SNAPSHOT, 3.5.x 6.5.11, 3.4.x 6.4.13 → spring-security-bom 최신 릴리스 7.1.1/7.0.7/6.5.11/6.4.13, 브랜치 7.1.x/7.0.x/6.5.x/6.4.x. 저장소 Apache-2.0, 문서 `docs/modules/ROOT`(폴더가 깊고 하위 폴더 index.adoc에 본문). 주소 규칙은 Spring Data와 같음 (7.1 302, 7.0·6.5 200, 6.4 404).
   - 판별 문서: security 190/190/187/174, oauth2-client(OAuth2 부분만) 37/37/31/30. 남은 include 0. `{registrationId}`, `{baseUrl}`은 Spring Security의 URL 자리표시자라 그대로 둠.
   - 대표 질문: security 4.0.x "특정 경로만 인증 없이 허용"(Security 7.0 문서 6개, `requestMatchers(...).permitAll()` 예시), oauth2-client 3.5.x "구글 로그인"(Security 6.5 문서 5개, `spring.security.oauth2.client.registration.google` 설정). verify 21/21.
+- Kafka·AMQP·Batch·Session (2026-10-22): Boot 의존성 설정(4.1.x/4.0.x/3.5.x/3.4.x) Spring Kafka 4.1/4.0/3.3.16/3.3.11, Spring AMQP 4.1/4.0/3.2.12/3.2.8, Spring Batch 6.0/6.0/5.2.6/5.2.4, Spring Session 4.1.1/4.0.5/3.5.7/3.4.7. Boot 3.5·3.4가 같은 판을 쓰는 경우가 있음. Maven Central 최신 릴리스 Kafka 4.1.1/4.0.7/3.3.16, AMQP 4.1.1/4.0.5/3.2.12, Batch 6.0.5/5.2.6, Session 4.1.1/4.0.5/3.5.7/3.4.7. 저장소 모두 Apache-2.0, NOTICE 없음, 해당 브랜치 있음.
+  - 문서 위치: spring-kafka-docs/src/main/antora, src/reference/antora(AMQP), spring-batch-docs, spring-session-docs. docs.spring.io는 최신판만 302(버전 없는 주소), 나머지 판은 모두 200 (Spring Data·Security와 달리 3.4 짝도 남아 있음).
+  - 판별 문서: kafka 71/71/70/70, rabbitmq 87/85/83/83, batch 64×4, session-data-redis 25/25/27/27. 문서 폴더 밖 예제 코드 include({java-examples}/…java, {samples-dir}/…xml)는 지움.
+  - 대표 질문: kafka 4.0.x 재시도·DLT(Kafka 4.0 문서 6개, DefaultErrorHandler + DeadLetterPublishingRecoverer), rabbitmq 3.5.x 재시도(AMQP 3.2 문서 5개), batch 4.0.x 청크 Step(Batch 6.0 문서 7개, StepBuilder.chunk), session 3.4.x Redis 세션(Session 3.4 문서 7개).
 - 출처 표기 (2026-10-22): README "출처와 라이선스" 절(저장소 9곳, Apache-2.0, 수정 고지)과 사이드바 하단 고지 추가.
 
 ## 4. 알려진 문제

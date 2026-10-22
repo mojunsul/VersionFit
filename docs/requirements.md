@@ -24,6 +24,7 @@
 | start.spring.io `/dependencies?bootVersion=` | 버전별 의존성 좌표 (F2010 가이드) | 위 메타데이터 API와 같음. 4.0.x·4.1.x만 지원(3.x는 400), 2026-10-21 확인 | 버전당 1회, `data/coordinates/`에 저장 |
 | github.com/springdoc/springdoc.github.io | 외부 문서 (springdoc-openapi 3.x·2.x AsciiDoc) | Apache-2.0 (GitHub API로 확인), springdoc.org robots.txt `Allow: /`, 2026-10-21 확인 | Boot 4.x → 3.x판, 3.4~3.5 → 2.x판 |
 | github.com/spring-projects/spring-data-jpa, -redis, -mongodb, -elasticsearch | 외부 문서 (Spring Data 모듈 Antora AsciiDoc) | Apache-2.0 (GitHub API로 확인), NOTICE 없음, 2026-10-22 확인 | 모듈 판은 spring-data-bom 값 (아래 progress.md 3절) |
+| github.com/spring-projects/spring-kafka, spring-amqp, spring-batch, spring-session | 외부 문서 (Antora AsciiDoc) | Apache-2.0 (GitHub API로 확인), NOTICE 없음, 2026-10-22 확인 | Boot 의존성 설정의 판 (progress.md 3절) |
 | github.com/spring-projects/spring-security | 외부 문서 (Spring Security Antora AsciiDoc) | Apache-2.0 (GitHub API로 확인), NOTICE 없음, 2026-10-22 확인 | Boot 4.1/4.0/3.5/3.4 → 브랜치 7.1.x/7.0.x/6.5.x/6.4.x |
 | github.com/spring-projects/spring-data-relational, spring-data-commons | 외부 문서 (Spring Data JDBC·R2DBC Antora AsciiDoc, commons 페이지는 include로 포함) | Apache-2.0 (GitHub API로 확인), 2026-10-22 확인 | Boot 4.1/4.0/3.5/3.4 → 브랜치 4.1.x/4.0.x/3.5.x/3.4.x |
 

@@ -1,4 +1,4 @@
-"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data, Spring Security. (F2016 일부)
+"""Spring Boot 문서 밖의 외부 문서 출처: springdoc-openapi, Spring Data, Security, Kafka, AMQP, Batch, Session. (F2016 일부)
 
 항목 id가 SOURCES에 있으면, 그 항목의 질문 시점 수집에서 이 문서도 후보로 검색한다.
 Boot 버전마다 호환되는 판(브랜치·폴더)의 문서를 쓴다 (progress.md 3절).
@@ -24,15 +24,16 @@ _DATA_SHARED = ["pages/repositories/*.adoc", "pages/commons/*.adoc", "pages/obje
 
 
 def _antora(title: str, repo: str, url_base: str, root: str, releases: dict[str, str], pages: list[str],
-            attributes) -> dict:
+            attributes, gone: tuple[str, ...] = ("3.4.x",)) -> dict:
     """Spring 프로젝트의 Antora 문서. releases: Boot 버전 → 프로젝트 릴리스 버전(Boot가 관리하는 값).
-    판(major.minor)이 브랜치 이름이다. docs.spring.io는 최신판(Boot 4.1.x 짝)을 버전 없는 주소로, 가장 오래된 판(3.4.x 짝)은
-    내려서(404) GitHub 원문을 링크한다. attributes(boot, short, release)는 판의 문서 속성을 만든다."""
+    판(major.minor)이 브랜치 이름이다. docs.spring.io는 최신판(Boot 4.1.x 짝)을 버전 없는 주소로 보여 주고,
+    gone에 든 Boot 버전의 판은 내려가서(404) GitHub 원문을 링크한다. attributes(boot, short, release)는 판의 문서 속성을 만든다."""
+    current = releases["4.1.x"].rsplit(".", 1)[0]
     editions = {}
     for boot, release in releases.items():
         short = release.rsplit(".", 1)[0]
-        editions[boot] = {"branch": f"{short}.x", "pages": pages, "page_urls": True,
-                          "url": {"4.1.x": url_base, "3.4.x": None}.get(boot, f"{url_base}{short}/"),
+        url = url_base if short == current else None if boot in gone else f"{url_base}{short}/"
+        editions[boot] = {"branch": f"{short}.x", "pages": pages, "page_urls": True, "url": url,
                           "label": f"{title} {short} 문서", "attributes": attributes(boot, short, release)}
     return {"repo": f"spring-projects/{repo}", "root": root, "license": "Apache-2.0", "editions": editions}
 
@@ -74,6 +75,15 @@ def _releases(*versions: str) -> dict[str, str]:
     return dict(zip(DATA_COMMONS, versions))
 
 
+def _project(title: str, repo: str, root: str, releases: tuple[str, ...]) -> dict:
+    """문서 전체(pages 아래 모두)를 쓰는 Spring 프로젝트. 속성은 버전 값만 넣는다."""
+    def attributes(boot, short, release):
+        return {"project-version": release, "version": release, "revnumber": release, "spring-session-version": release,
+                "spring-framework-reference-url": "https://docs.spring.io/spring-framework/reference"}
+    return _antora(title, repo, f"https://docs.spring.io/{repo}/reference/", root, _releases(*releases),
+                   ["pages/**"], attributes, gone=())
+
+
 # 모듈 릴리스 버전은 spring-data-bom 2026.0.1 / 2025.1.7 / 2025.0.13 / 2024.1.13 값 (2026-10-22 확인)
 _RELATIONAL = _releases("4.1.1", "4.0.7", "3.5.13", "3.4.13")
 
@@ -111,6 +121,13 @@ SOURCES = {
     "security": _security("Spring Security", ["pages/*.adoc", "pages/features/**", "pages/servlet/**", "pages/reactive/**",
                                               "pages/migration/**", "pages/migration-*/**", "pages/native-image/**"]),
     "oauth2-client": _security("Spring Security", ["pages/servlet/oauth2/**", "pages/reactive/oauth2/**"]),
+    # 아래 판은 Boot 의존성 설정의 값 (4.1.x/4.0.x/3.5.x/3.4.x)과 Maven Central 최신 릴리스 (2026-10-22 확인). 네 판 모두 문서가 남아 있다
+    "kafka": _project("Spring for Apache Kafka", "spring-kafka", "spring-kafka-docs/src/main/antora/modules/ROOT",
+                      ("4.1.1", "4.0.7", "3.3.16", "3.3.16")),
+    "rabbitmq": _project("Spring AMQP", "spring-amqp", "src/reference/antora/modules/ROOT", ("4.1.1", "4.0.5", "3.2.12", "3.2.12")),
+    "batch": _project("Spring Batch", "spring-batch", "spring-batch-docs/modules/ROOT", ("6.0.5", "6.0.5", "5.2.6", "5.2.6")),
+    "session-data-redis": _project("Spring Session", "spring-session", "spring-session-docs/modules/ROOT",
+                                   ("4.1.1", "4.0.5", "3.5.7", "3.4.7")),
 }
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
@@ -141,6 +158,8 @@ def _include_target(target: str, repo: str, branch: str, path: str) -> tuple[str
         return COMMONS_REPO, f"{DATA_ROOT}/{m[1] or 'page'}s/{m[2]}"
     if target.startswith("example$"):
         return "", ""  # 예제 코드는 빌드할 때 테스트 소스에서 복사돼 저장소 문서 폴더에 없다. 줄을 지운다
+    if repo != _SPRINGDOC["repo"] and ("{" in target or not target.split("[")[0].endswith(".adoc")):
+        return "", ""  # 빌드 속성으로 가리키는 소스·샘플 코드(.java, .kt, .xml 등)도 문서 사본 밖이다
     if target.startswith("partial$"):  # 포함하는 문서가 속한 Antora 모듈의 partials (저장소마다 위치가 다르다)
         module = path[:path.index("/modules/ROOT/") + len("/modules/ROOT")] if "/modules/ROOT/" in path else DATA_ROOT
         return repo, f"{module}/partials/{target.removeprefix('partial$')}"

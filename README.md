@@ -59,6 +59,10 @@ copy .env.example .env                          # GMS_KEY 입력
 | Spring Data MongoDB | [spring-projects/spring-data-mongodb](https://github.com/spring-projects/spring-data-mongodb) | data-mongodb |
 | Spring Data Elasticsearch | [spring-projects/spring-data-elasticsearch](https://github.com/spring-projects/spring-data-elasticsearch) | data-elasticsearch |
 | Spring Security | [spring-projects/spring-security](https://github.com/spring-projects/spring-security) | security, oauth2-client |
+| Spring for Apache Kafka | [spring-projects/spring-kafka](https://github.com/spring-projects/spring-kafka) | kafka |
+| Spring AMQP | [spring-projects/spring-amqp](https://github.com/spring-projects/spring-amqp) | rabbitmq |
+| Spring Batch | [spring-projects/spring-batch](https://github.com/spring-projects/spring-batch) | batch |
+| Spring Session | [spring-projects/spring-session](https://github.com/spring-projects/spring-session) | session-data-redis |
 | springdoc-openapi 문서 | [springdoc/springdoc.github.io](https://github.com/springdoc/springdoc.github.io) | springdoc-openapi |
 | Initializr 메타데이터 | [start.spring.io](https://start.spring.io) ([spring-io/start.spring.io](https://github.com/spring-io/start.spring.io)) | 의존성 목록, 버전별 좌표 |
 
