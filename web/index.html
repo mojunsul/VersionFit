@@ -24,6 +24,7 @@
   </aside>
 
   <main>
+    <div id="topbar" class="topbar">
     <header>
       <h1>🍃 Spring Boot 버전별 문서 Q&amp;A</h1>
       <p class="caption">의존성과 Spring Boot 버전을 고르면, 그 버전의 공식 문서를 근거로 답하고 출처를 함께 보여 줍니다.</p>
@@ -39,9 +40,10 @@
       <p id="explore-status" class="caption"></p>
       <div id="explore-cards" class="cards"></div>
     </details>
+    <h3 id="chat-title" hidden></h3>
+    </div>
 
     <section id="chat-area" hidden>
-      <h3 id="chat-title"></h3>
       <div id="messages"></div>
       <form id="ask-form">
         <textarea id="ask-input" rows="2" maxlength="1000" placeholder="궁금한 점을 물어보세요" required></textarea>

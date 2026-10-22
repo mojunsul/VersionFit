@@ -112,7 +112,9 @@ function generalButton(m) {
       if (target) target.general = answer;
       try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 저장 불가 */ }
       m.general = answer;
-      btn.replaceWith(renderGeneral(answer));
+      const box = renderGeneral(answer);
+      btn.replaceWith(box);
+      box.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (err) {
       btn.disabled = false;
       btn.textContent = "💡 일반 지식으로 답변 보기";
@@ -138,6 +140,7 @@ function selectTarget() {
   const item = state.byId[state.itemId];
   const ready = Boolean(item) && !state.blocked;
   $("chat-area").hidden = !ready;
+  $("chat-title").hidden = !ready;
   $("pick-hint").hidden = Boolean(item);
   $("guide-btn").disabled = !ready || state.busy;
   $("clear-btn").disabled = !item || state.blocked;
@@ -212,7 +215,11 @@ async function send(kind, question) {
     const saved = (() => { try { return JSON.parse(localStorage.getItem(key)) || messages; } catch { return messages; } })();
     saved.push(reply);
     try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 저장 불가 */ }
-    if (chatKey() === key) $("messages").append(renderMessage(reply));
+    if (chatKey() === key) {
+      const node = renderMessage(reply);
+      $("messages").append(node);
+      node.scrollIntoView({ behavior: "smooth", block: "start" }); // 긴 답변도 첫 줄부터 읽게 한다
+    }
   } catch (err) {
     status.replaceWith(el("p", { className: "error" }, err.message));
   } finally {
@@ -244,6 +251,7 @@ async function runExplore(condition) {
         state.itemId = r.item_id;
         $("item-filter").value = "";
         renderItemOptions("");
+        $("explore").open = false; // 고른 뒤에는 접어서 상단 고정 영역을 줄인다
         selectTarget();
         $("chat-area").scrollIntoView({ behavior: "smooth" });
       });
@@ -331,5 +339,9 @@ async function init() {
   selectTarget();
   setBusy(false);
 }
+
+// 상단 고정 영역의 높이만큼 답변 스크롤 위치를 내려, 답변 첫 줄이 고정 영역에 가리지 않게 한다
+new ResizeObserver(([e]) => document.documentElement.style.setProperty("--topbar-h", `${e.target.offsetHeight}px`))
+  .observe($("topbar"));
 
 init();

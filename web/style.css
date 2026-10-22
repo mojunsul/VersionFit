@@ -36,7 +36,7 @@ body {
   display: flex;
   justify-content: center; /* 사이드바와 본문을 한 덩어리로 화면 가운데에 둔다 */
   gap: 24px;
-  padding: 24px;
+  padding: 0 24px; /* 위쪽 여백은 상단 고정 영역 안에 둬서 스크롤해도 크기가 같다 */
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
@@ -53,6 +53,7 @@ aside {
   align-self: flex-start;
   position: sticky;
   top: 24px;
+  margin-top: 24px;
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   display: flex;
@@ -98,6 +99,12 @@ form button { flex-shrink: 0; }
 .card { padding: 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
 .card .reason { font-size: .85rem; color: var(--muted); flex: 1; }
 
+.topbar { position: sticky; top: 0; z-index: 1; background: var(--bg); padding-top: 24px; border-bottom: 1px solid var(--border); }
+.topbar #chat-title { margin: 8px 0 10px; }
+.topbar #explore-cards { max-height: 40vh; overflow-y: auto; } /* 결과 카드가 많아도 고정 영역이 화면을 덮지 않게 */
+.msg { scroll-margin-top: calc(var(--topbar-h, 0px) + 12px); }
+
+#ask-form { position: sticky; bottom: 0; z-index: 1; background: var(--bg); margin-top: 0; padding: 10px 0 16px; border-top: 1px solid var(--border); }
 #messages { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
 .msg { padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); overflow-wrap: anywhere; }
 .msg.user { background: var(--user); border-color: transparent; white-space: pre-wrap; }
@@ -111,7 +118,9 @@ form button { flex-shrink: 0; }
 
 @media (max-width: 760px) {
   body { flex-direction: column; gap: 16px; padding: 16px; }
-  aside { width: 100%; position: static; }
+  aside { width: 100%; position: static; margin-top: 0; }
+  .topbar { position: static; padding-top: 0; } /* 좁은 화면에서는 고정 영역이 답변 칸을 너무 많이 가린다 */
+  .msg { scroll-margin-top: 12px; }
   main { padding: 0; }
 }
 .general-btn { margin-top: 10px; }
