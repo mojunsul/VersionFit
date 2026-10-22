@@ -108,7 +108,7 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     key = lambda term: f"{item['id']}|{version}|{term}"
     new_terms = [t for t in terms if key(t) not in log]
     result = {"terms": terms, "new_terms": new_terms, "candidates": [], "selected": [], "added_chunks": 0}
-    must = doc_id_for_item(item["doc_url"])
+    must = doc_id_for_item(item["doc_url"]) or external_docs.must_doc(item["id"])
     if not new_terms:
         on_step("이미 수집한 검색어라 수집을 건너뜀")
         _save_log(log)  # 질문별 검색어는 새로 기록됐을 수 있다

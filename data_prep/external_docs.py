@@ -132,11 +132,45 @@ SOURCES = {
     # Lombok 웹사이트의 기능 문서 (FreeMarker HTML 템플릿, 예제 코드는 usageExamples/). 판은 Boot 의존성 설정의 Lombok 값
     # 4.1.x·4.0.x 1.18.48, 3.5.x 1.18.46, 3.4.x 1.18.42 = 릴리스 태그 (2026-10-22 확인). 사이트는 최신판(1.18.48)만 보여 준다
     "lombok": {
-        "repo": "projectlombok/lombok", "root": "website/templates/features", "license": "MIT", "ext": ".html",
+        "repo": "projectlombok/lombok", "root": "website/templates/features", "license": "MIT",
         "editions": {boot: {"branch": f"v{v}", "pages": ["*.html", "experimental/*.html"], "page_urls": True,
                             "url": "https://projectlombok.org/features/" if v == "1.18.48" else None,
+                            "page_suffix": "",  # 사이트 주소는 확장자가 없다 (/features/Data)
                             "label": f"Lombok {v} 문서"}
                      for boot, v in [("4.1.x", "1.18.48"), ("4.0.x", "1.18.48"), ("3.5.x", "1.18.46"), ("3.4.x", "1.18.42")]},
+    },
+    # Hibernate Validator 레퍼런스 (AsciiDoc, 장마다 파일). 판은 Boot 의존성 설정의 값 4.1.x 9.1.5, 4.0.x 9.0.2,
+    # 3.5.x·3.4.x 8.0.3 = 릴리스 태그 (2026-10-22 확인). 9.1부터 장 파일이 reference/_chNN.adoc로 바뀌었다.
+    # 예제 코드는 {sourcedir}(= documentation/src/test/java)의 //tag::include[] 구간이다
+    "validation": {
+        "repo": "hibernate/hibernate-validator", "root": "documentation/src/main/asciidoc", "license": "Apache-2.0",
+        "editions": {boot: {"branch": tag, "pages": [pages], "page_urls": False,
+                            "url": f"https://docs.hibernate.org/validator/{short}/reference/en-US/html_single/",
+                            "label": f"Hibernate Validator {short} 문서",
+                            "attributes": {"hvVersion": tag, "hvVersionShort": short,
+                                           "sourcedir": "/documentation/src/test/java", "engine-sourcedir": "/engine/src/main/java"}}
+                     for boot, tag, short, pages in [("4.1.x", "9.1.5.Final", "9.1", "reference/_ch*.adoc"),
+                                                     ("4.0.x", "9.0.2.Final", "9.0", "ch*.asciidoc"),
+                                                     ("3.5.x", "8.0.3.Final", "8.0", "ch*.asciidoc"),
+                                                     ("3.4.x", "8.0.3.Final", "8.0", "ch*.asciidoc")]},
+    },
+    # MyBatis 스타터 (Boot 관리 밖). 판은 스타터 호환표와 각 태그 pom.xml의 spring-boot.version으로 고른 태그:
+    # 4.1.x 4.1.0(Boot 4.1.0), 4.0.x 4.0.1(Initializr 값과 같음), 3.5.x·3.4.x 3.0.5(Boot 3.2~3.5) (2026-10-22 확인).
+    # SQL 매퍼·동적 SQL은 MyBatis 코어 문서에 있어 함께 쓴다 (세 태그 모두 mybatis.version 3.5.19)
+    "mybatis": {
+        "repo": "mybatis/spring-boot-starter", "root": "mybatis-spring-boot-autoconfigure/src/site/markdown",
+        "license": "Apache-2.0", "also": ["mybatis-core"],
+        "must": "index.md",  # 스타터 설정 속성(mybatis.*)은 이 한 페이지에 있는데 제목이 "Introduction"이라 선별에서 밀린다
+        "editions": {boot: {"branch": f"mybatis-spring-boot-{v}", "pages": ["index.md"], "page_urls": False,
+                            "url": "https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/" if v == "4.1.0" else None,
+                            "label": f"MyBatis Spring Boot Starter {v} 문서"}
+                     for boot, v in [("4.1.x", "4.1.0"), ("4.0.x", "4.0.1"), ("3.5.x", "3.0.5"), ("3.4.x", "3.0.5")]},
+    },
+    "mybatis-core": {
+        "repo": "mybatis/mybatis-3", "root": "src/site/markdown", "license": "Apache-2.0",
+        "editions": {boot: {"branch": "mybatis-3.5.19", "pages": ["*.md"], "page_urls": True,
+                            "url": "https://mybatis.org/mybatis-3/", "label": "MyBatis 3.5.19 문서"}
+                     for boot in ("4.1.x", "4.0.x", "3.5.x", "3.4.x")},
     },
     "oauth2-resource-server": _security("Spring Security", ["pages/servlet/oauth2/resource-server/**",
                                                             "pages/reactive/oauth2/resource-server/**"]),
@@ -151,6 +185,7 @@ SOURCES |= {alias: SOURCES[base] for base, aliases in {
 }.items() for alias in aliases}
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
+DOC_EXT = (".adoc", ".asciidoc", ".html", ".md")
 
 
 def _local(repo: str, branch: str, path: str) -> Path:
@@ -176,9 +211,11 @@ def _include_target(target: str, repo: str, branch: str, path: str) -> tuple[str
     """include 대상 → (저장소, 경로). Antora의 partial$, commons 페이지, 같은 폴더 상대 경로만 푼다."""
     if m := re.fullmatch(r"\{commons\}@data-commons::(?:(page|partial)\$)?(.+)", target):  # 생략하면 page
         return COMMONS_REPO, f"{DATA_ROOT}/{m[1] or 'page'}s/{m[2]}"
+    if target.startswith("/"):  # 출처 속성이 저장소 루트 기준 경로로 가리킨 파일 (예: Hibernate Validator 예제 코드)
+        return repo, target[1:]
     if target.startswith("example$"):
         return "", ""  # 예제 코드는 빌드할 때 테스트 소스에서 복사돼 저장소 문서 폴더에 없다. 줄을 지운다
-    if repo != _SPRINGDOC["repo"] and ("{" in target or not target.split("[")[0].endswith(".adoc")):
+    if repo != _SPRINGDOC["repo"] and ("{" in target or not target.split("[")[0].endswith(DOC_EXT)):
         return "", ""  # 빌드 속성으로 가리키는 소스·샘플 코드(.java, .kt, .xml 등)도 문서 사본 밖이다
     if target.startswith("partial$"):  # 포함하는 문서가 속한 Antora 모듈의 partials (저장소마다 위치가 다르다)
         module = path[:path.index("/modules/ROOT/") + len("/modules/ROOT")] if "/modules/ROOT/" in path else DATA_ROOT
@@ -210,11 +247,31 @@ def _freemarker(repo: str, branch: str, text: str, fetch: bool) -> str:
     return re.sub(r'<@f\.snippets name="([^"]+)"\s*/>', snippets, text).strip() + "\n"
 
 
+def _markdown(text: str) -> str:
+    """MyBatis 사이트 Markdown을 AsciiDoc 모양으로: # 제목 → = 제목, ``` → ----. 코드 블록 밖의 HTML 태그와
+    앞머리(title:, author:)는 지운다. 코드 블록 안(XML 매퍼 예제)은 그대로 둔다."""
+    text = re.sub(r"\A(?:\s*<!--.*?-->)?(?:\s*\w+: [^\n]*\n)*", "", text, flags=re.S)  # 라이선스 주석, 앞머리
+    out, fence = [], False
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            out.append("----")
+            fence = not fence
+        elif fence:
+            out.append(line)
+        elif m := re.match(r"(#{1,6}) (.+)", line):
+            out.append(f"{'=' * len(m[1])} {m[2]}")
+        else:
+            out.append(re.sub(r"<[^>]+>", "", re.sub(r"<h1[^>]*>.*?</h1>", "", line)))
+    return "\n".join(out)
+
+
 def _expand(repo: str, branch: str, path: str, fetch: bool, commons_branch: str | None = None, depth: int = 0,
             defs: dict[str, str] | None = None) -> str:
     text = _read(repo, branch, path, fetch) or ""
     if path.endswith(".html"):
         return _freemarker(repo, branch, text, fetch)
+    if path.endswith(".md"):
+        return _markdown(text)
     if depth > 5:
         return text
     # include 경로가 문서 속성일 수 있다 (예: :vector-search-intro-include: partial$...). 상위 문서의 정의도 물려받는다
@@ -230,6 +287,11 @@ def _expand(repo: str, branch: str, path: str, fetch: bool, commons_branch: str 
             return ""
         # commons 페이지는 릴리스 묶음의 commons 판 브랜치에서 읽는다 (MongoDB 5.0 ↔ commons 4.0처럼 번호가 다르다)
         to_branch = (commons_branch or branch) if found[0] == COMMONS_REPO and repo != COMMONS_REPO else branch
+        if not found[1].endswith(DOC_EXT):  # 코드 파일은 tags=이름 구간만 (// tag::이름[] ~ // end::이름[])
+            code = _read(found[0], to_branch, found[1], fetch) or ""
+            if tag := re.search(r"\btags?=([\w-]+)", m[0]):
+                code = "".join(re.findall(rf"//\s*tag::{tag[1]}\[\]\n(.*?)//\s*end::{tag[1]}\[\]", code, re.S))
+            return code.strip("\n")
         return _expand(found[0], to_branch, found[1], fetch, commons_branch, depth + 1, defs)
     return INCLUDE.sub(sub, text)
 
@@ -258,11 +320,14 @@ def _pages(s: dict, edition: dict, paths: list[str]) -> list[str]:
     """원문 경로 중 이 판의 본문 페이지. 패턴의 *는 한 폴더 안, **는 하위 폴더까지.
     밑줄 조각, nav, 최상위 index(목차 묶음)는 본문이 아니다. 하위 폴더의 index는 본문이다 (예: servlet/oauth2/index.adoc)."""
     root = s["root"] + "/"
-    rels = [p.removeprefix(root) for p in paths if p.startswith(root) and p.endswith(s.get("ext", ".adoc"))]
+    rels = [p.removeprefix(root) for p in paths if p.startswith(root) and p.endswith(DOC_EXT)]
+    name = lambda r: r.rsplit("/", 1)[-1]
+    # 밑줄 조각은 패턴이 밑줄로 시작할 때만 본문이다 (Hibernate Validator 9.1의 reference/_ch02.adoc)
     return sorted(r for r in rels if any(fnmatch(r, pat) and ("**" in pat or "/" not in r.removeprefix(pat.split("*")[0]))
+                                         and (not name(r).startswith("_") or name(pat).startswith("_"))
                                          for pat in edition["pages"])
-                  and not r.rsplit("/", 1)[-1].startswith("_") and r.rsplit("/", 1)[-1] != "nav.adoc"
-                  and not (r.endswith(f"index{s.get('ext', '.adoc')}") and r.count("/") <= 1))
+                  and name(r) != "nav.adoc"
+                  and not (name(r).startswith("index.") and r.count("/") <= 1 and r not in edition["pages"]))
 
 
 def download(source: str) -> int:
@@ -277,6 +342,8 @@ def download(source: str) -> int:
                         defs=edition.get("attributes"))
         if s.get("attributes_from"):
             _read(s["repo"], branch, s["attributes_from"], fetch=True)
+    for extra in s.get("also", []):
+        download(extra)
     return sum(1 for _ in (ROOT / CONFIG["paths"]["external_docs_dir"]).rglob("*") if _.is_file()) - before
 
 
@@ -300,15 +367,25 @@ def load(source: str, version: str) -> dict[str, str]:
     if not edition:
         return {}
     base = _local(s["repo"], edition["branch"], s["root"])
-    paths = [f"{s['root']}/{p.relative_to(base).as_posix()}" for p in base.rglob(f"*{s.get('ext', '.adoc')}")] if base.exists() else []
+    paths = [f"{s['root']}/{p.relative_to(base).as_posix()}" for p in base.rglob("*")] if base.exists() else []
     docs = {}
     for rel in _pages(s, edition, paths):
         attrs = dict(_attributes(source, edition))  # 본문 속성 정의(:이름: 값)가 다른 문서로 새지 않게 문서마다 복사한다
         text = _conditionals(_expand(s["repo"], edition["branch"], f"{s['root']}/{rel}", fetch=False,
                                      commons_branch=edition.get("commons_branch"), defs=edition.get("attributes")), attrs)
         text = re.sub(r"\{([\w-]+)\}", lambda m: attrs.get(m[1], m[0]), text)
+        if not re.search(r"(?m)^= ", text) and (h := re.search(r"(?m)^==+ (.+)$", text)):
+            text = f"= {h[1]}\n\n{text}"  # 장 파일(== 로 시작)도 문서 제목이 있어야 후보 선별에 제목이 보인다
         docs[f"{source}:{rel}"] = clean(text)
+    for extra in s.get("also", []):  # 한 항목이 여러 저장소의 문서를 쓰는 경우 (MyBatis 스타터 + MyBatis 코어)
+        docs |= load(extra, version)
     return docs
+
+
+def must_doc(item_id: str) -> str | None:
+    """항목의 외부 문서 중 선별과 무관하게 늘 넣는 문서의 doc_id (Initializr 문서 링크가 Boot 문서가 아닌 항목용)."""
+    s = SOURCES.get(item_id)
+    return f"{item_id}:{s['must']}" if s and s.get("must") else None
 
 
 def describe(doc_id: str, version: str) -> dict:
@@ -319,6 +396,5 @@ def describe(doc_id: str, version: str) -> dict:
     repo_url = f"https://github.com/{s['repo']}/blob/{edition['branch']}/{s['root']}/{rel}"
     url = edition["url"]
     if url and edition["page_urls"]:
-        page = rel.removeprefix("pages/").removesuffix(s.get("ext", ".adoc"))
-        url += page if s.get("ext") == ".html" else page + ".html"  # Lombok 사이트 주소는 확장자가 없다 (/features/Data)
+        url += re.sub(r"\.\w+$", "", rel.removeprefix("pages/")) + edition.get("page_suffix", ".html")
     return {"source_url": url or repo_url, "repo_url": repo_url, "source_type": edition["label"], "license": s["license"]}
