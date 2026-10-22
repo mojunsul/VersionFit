@@ -39,7 +39,7 @@
 | 디렉터리: 배치는 `scripts/`, 의존 방향 `app → services → rag → data_prep, vector_store` | 사용자 요청으로 루트 정리 (CLAUDE.md 구조 표) |
 | UI: FastAPI(`server.py`) + HTML·CSS·JS(`web/`). Streamlit `app.py` 삭제, `requirements.txt`의 streamlit 줄은 명세 필수 목록이라 남김 (사용자 결정 2026-10-21) | 로직(`rag/`, `services/`)은 UI와 분리돼 있어 화면만 교체. fastapi==0.156.8 추가(명세 목록 밖), uvicorn==0.54.0. 기본 127.0.0.1이라 네트워크에 노출 안 됨 |
 | Vector DB: ChromaDB, 컬렉션 `items`/`docs` | 명세 필수 라이브러리 |
-| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` (**개발 중 임시로 `gpt-5.4-nano`**, 완성본에서 mini로 되돌림. 사용자 요청 2026-10-21) | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
+| 임베딩: `text-embedding-3-small` (GMS), 답변: `gpt-5.4-mini` (개발 중 nano로 임시 사용 후 2026-10-22 mini로 원복) | GMS에서 임베딩 동작 확인 (1536차원). 답변 모델은 nano에서 변경 (3절 모델 비교, 4.3-1) |
 | 설정 파일: `config.toml` (tomllib) | 의존성 추가 없이 읽음 |
 | 위험 도메인 아님, 면책 문구 없음 | |
 
