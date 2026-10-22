@@ -81,6 +81,10 @@ function renderMessage(m) {
 function renderChat() {
   const list = $("messages");
   list.replaceChildren(...loadChat().map(renderMessage));
+  syncEmpty();
+}
+function syncEmpty() {
+  $("chat-area").classList.toggle("empty", !$("messages").children.length);
 }
 
 // ---------- 문서에 답이 없을 때 일반 지식 답변 (버튼을 눌렀을 때만) ----------
@@ -146,7 +150,8 @@ function selectTarget() {
   $("clear-btn").disabled = !item || state.blocked;
   $("unpick-btn").disabled = !item || state.blocked;
   if (item) {
-    $("chat-title").textContent = `${item.name} · Spring Boot ${state.version}`;
+    $("chat-title").replaceChildren(el("span", { className: "pill item" }, item.name),
+      el("span", { className: "pill version" }, `Spring Boot ${state.version}`));
     $("ask-input").placeholder = `${item.name} (${state.version})에 대해 궁금한 점을 물어보세요`;
     $("item-select").value = state.itemId;
     remember("last-item", state.itemId);
@@ -193,6 +198,7 @@ async function send(kind, question) {
   messages.push(user);
   saveChat(messages);
   $("messages").append(renderMessage(user));
+  syncEmpty();
 
   const status = el("details", { className: "msg status", open: true });
   const label = el("summary", {}, kind === "guide" ? "가이드를 준비하고 있습니다..." : "관련 문서를 찾고 있습니다...");

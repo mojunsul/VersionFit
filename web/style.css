@@ -1,16 +1,18 @@
 :root {
-  --bg: #ffffff;
-  --panel: #f5f7f6;
+  /* 팔레트: 핑크 #F6E2E9, 크림 #FEFAF3, 연세이지 #B8CFB3, 세이지 #84A282. 세이지는 흰 글씨 대비가 낮아 버튼 글씨를 어둡게 쓴다 */
+  --bg: #FEFAF3;
+  --panel: color-mix(in srgb, #B8CFB3 22%, #FEFAF3);
   --text: #1d2321;
   --muted: #5d6965;
-  --border: #d5dcd9;
-  --accent: #2e7d4f;
-  --accent-text: #ffffff;
-  --user: #e8f2ec;
-  --info-bg: #eaf2fb;
+  --border: color-mix(in srgb, #B8CFB3 70%, #FEFAF3);
+  --accent: #84A282;
+  --accent-text: #1d2321;
+  --accent-soft: #B8CFB3;
+  --user: #F6E2E9;
+  --info-bg: color-mix(in srgb, #B8CFB3 35%, #FEFAF3);
   --warn-bg: #fdf3e1;
   --error-bg: #fbe9e9;
-  --code: #f0f2f1;
+  --code: color-mix(in srgb, #B8CFB3 18%, #FEFAF3);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,9 +22,10 @@
     --text: #e3e8e6;
     --muted: #9aa6a2;
     --border: #36403d;
-    --accent: #5cb784;
+    --accent: #84A282;
     --accent-text: #0f1412;
-    --user: #22322a;
+    --accent-soft: color-mix(in srgb, #B8CFB3 30%, #161a19);
+    --user: color-mix(in srgb, #F6E2E9 18%, #161a19);
     --info-bg: #1c2836;
     --warn-bg: #352b18;
     --error-bg: #3a1f1f;
@@ -100,11 +103,21 @@ form button { flex-shrink: 0; }
 .card .reason { font-size: .85rem; color: var(--muted); flex: 1; }
 
 .topbar { position: sticky; top: 0; z-index: 1; background: var(--bg); padding-top: 24px; border-bottom: 1px solid var(--border); }
-.topbar #chat-title { margin: 8px 0 10px; }
+.topbar #chat-title { margin: 8px 0 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#chat-title[hidden] { display: none; }
+.pill { padding: 4px 14px; border-radius: 999px; font-size: 1.05rem; font-weight: 700; }
+.pill.item { background: var(--accent); color: var(--accent-text); }
+.pill.version { background: var(--accent-soft); color: var(--text); }
+/* 사이드바에서도 고른 의존성과 버전이 눈에 띄게 (포커스가 없어도 강조색 유지) */
+#item-select option:checked { background: linear-gradient(var(--accent), var(--accent)); color: var(--accent-text); font-weight: 600; }
+#version-select { border: 2px solid var(--accent); font-weight: 700; }
 .topbar #explore-cards { max-height: 40vh; overflow-y: auto; } /* 결과 카드가 많아도 고정 영역이 화면을 덮지 않게 */
 .msg { scroll-margin-top: calc(var(--topbar-h, 0px) + 12px); }
 
 #ask-form { position: sticky; bottom: 0; z-index: 1; background: var(--bg); margin-top: 0; padding: 10px 0 16px; border-top: 1px solid var(--border); }
+/* 대화가 비어 있으면 입력칸을 남은 화면의 가운데에 두고, 첫 질문 뒤부터 아래에 고정한다 */
+#chat-area.empty { min-height: calc(100vh - var(--topbar-h, 0px) - 24px); display: flex; flex-direction: column; justify-content: center; }
+#chat-area.empty #ask-form { position: static; border-top: 0; }
 #messages { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
 .msg { padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); overflow-wrap: anywhere; }
 .msg.user { background: var(--user); border-color: transparent; white-space: pre-wrap; }
