@@ -1,7 +1,7 @@
 :root {
   /* 팔레트: 핑크 #F6E2E9, 크림 #FEFAF3, 연세이지 #B8CFB3, 세이지 #84A282. 세이지는 흰 글씨 대비가 낮아 버튼 글씨를 어둡게 쓴다 */
   --bg: #FEFAF3;
-  --panel: color-mix(in srgb, #B8CFB3 22%, #FEFAF3);
+  --panel: #ffffff;
   --text: #1d2321;
   --muted: #5d6965;
   --border: color-mix(in srgb, #B8CFB3 70%, #FEFAF3);
@@ -12,7 +12,7 @@
   --info-bg: color-mix(in srgb, #B8CFB3 35%, #FEFAF3);
   --warn-bg: #fdf3e1;
   --error-bg: #fbe9e9;
-  --code: color-mix(in srgb, #B8CFB3 18%, #FEFAF3);
+  --code: color-mix(in srgb, #B8CFB3 25%, #FEFAF3);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,7 +43,7 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.6 system-ui, "Malgun Gothic", sans-serif;
+  font: 15px/1.6 "D2Coding", "Malgun Gothic", monospace; /* subset에 없는 글자는 맑은 고딕으로 */
 }
 
 aside {
@@ -69,6 +69,7 @@ h1 { margin: 0; font-size: 1.6rem; }
 
 label { font-size: .85rem; color: var(--muted); }
 input, select, textarea, button { font: inherit; color: inherit; }
+pre, code { font-family: inherit; } /* 브라우저 기본 고정폭 글꼴 대신 D2Coding */
 input, select, textarea {
   width: 100%;
   padding: 8px;
@@ -114,16 +115,28 @@ form button { flex-shrink: 0; }
 .topbar #explore-cards { max-height: 40vh; overflow-y: auto; } /* 결과 카드가 많아도 고정 영역이 화면을 덮지 않게 */
 .msg { scroll-margin-top: calc(var(--topbar-h, 0px) + 12px); }
 
-#ask-form { position: sticky; bottom: 0; z-index: 1; background: var(--bg); margin-top: 0; padding: 10px 0 16px; border-top: 1px solid var(--border); }
+#ask-form { position: sticky; bottom: 0; z-index: 1; display: block; background: var(--bg); margin-top: 0; padding: 10px 0 12px; }
+.composer { display: flex; align-items: flex-end; gap: 8px; padding: 10px 10px 10px 18px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 24px; box-shadow: 0 2px 12px rgb(0 0 0 / 8%); }
+.composer:focus-within { border-color: var(--accent); }
+.composer textarea { flex: 1; resize: none; border: 0; padding: 6px 0; background: transparent; outline: none; max-height: 200px; overflow-y: auto; }
+.send { width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 1.1rem; font-weight: 700; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; line-height: 1; }
+.composer-hint { text-align: center; margin: 6px 0 0; font-size: .78rem; }
 /* 대화가 비어 있으면 입력칸을 남은 화면의 가운데에 두고, 첫 질문 뒤부터 아래에 고정한다 */
-#chat-area.empty { min-height: calc(100vh - var(--topbar-h, 0px) - 24px); display: flex; flex-direction: column; justify-content: center; }
-#chat-area.empty #ask-form { position: static; border-top: 0; }
+/* 대화 영역이 화면 아래까지 차지해 답변이 짧아도 입력칸이 화면 하단에 붙는다 */
+#chat-area { min-height: calc(100vh - var(--topbar-h, 0px)); display: flex; flex-direction: column; }
+#chat-area[hidden] { display: none; }
+#chat-area #messages { flex: 1; }
+#chat-area.empty { justify-content: center; }
+#chat-area.empty #messages { flex: 0; }
+#chat-area.empty #ask-form { position: static; }
 #messages { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
 .msg { padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); overflow-wrap: anywhere; }
 .msg.user { background: var(--user); border-color: transparent; white-space: pre-wrap; }
-.msg pre { background: var(--code); padding: 10px; border-radius: 6px; overflow-x: auto; }
-.msg code { background: var(--code); padding: 1px 4px; border-radius: 4px; }
-.msg pre code { padding: 0; }
+.msg pre { background: var(--code); padding: 10px; border: 1px solid var(--border); border-radius: 6px; overflow-x: auto; }
+.msg code { background: var(--code); padding: 1px 4px; border: 1px solid var(--border); border-radius: 4px; }
+.msg pre code { padding: 0; border: 0; }
 .msg details { margin-top: 10px; }
 .msg details summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 .status ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); font-size: .9rem; }

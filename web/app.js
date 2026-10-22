@@ -234,7 +234,8 @@ async function send(kind, question) {
   }
 }
 function setBusy(busy) {
-  for (const id of ["guide-btn", "ask-input"]) $(id).disabled = busy || !state.itemId || state.blocked;
+  $("guide-btn").disabled = busy || !state.itemId || state.blocked;
+  $("ask-input").disabled = !state.itemId || state.blocked; // 답을 기다리는 동안에도 다음 질문을 미리 쓸 수 있다
   $("ask-form").querySelector("button").disabled = busy;
 }
 
@@ -330,10 +331,14 @@ async function init() {
   $("ask-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = $("ask-input").value.trim();
-    if (!q) return;
+    if (!q || state.busy) return; // 답을 기다리는 중 Enter를 눌러도 쓴 내용은 지우지 않는다
     $("ask-input").value = "";
     send("ask", q);
   });
+  // 입력 줄 수에 맞춰 높이를 늘린다 (최대 높이는 CSS max-height, 넘치면 안에서 스크롤)
+  const fitInput = () => { const t = $("ask-input"); t.style.height = "auto"; t.style.height = `${t.scrollHeight}px`; };
+  $("ask-input").addEventListener("input", fitInput);
+  $("ask-form").addEventListener("submit", () => setTimeout(fitInput));
   $("ask-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("ask-form").requestSubmit(); }
   });
