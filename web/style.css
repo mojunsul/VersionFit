@@ -44,6 +44,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font: 15px/1.6 "D2Coding", "Malgun Gothic", monospace; /* subset에 없는 글자는 맑은 고딕으로 */
+  letter-spacing: .03em; /* D2Coding에 넓은 폭 판이 없어 자간으로 넓힌다 */
 }
 
 aside {
