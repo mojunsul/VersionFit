@@ -189,3 +189,30 @@ Spring Boot 4.0.x 기준, Kafka 브로커의 **권장 JVM 힙 메모리 크기**
 **RAG**
 
 Spring Boot 4.0.x 기준, 질문하신 `Kafka 브로커`에 권장되는 JVM 힙 메모리 크기는 문서에서 확인되지 않는다.
+
+## 4. 외부 문서 추가 효과 (2026-10-22)
+
+재현: `python -m scripts.compare_sources`. 외부 문서 출처를 넣은 13개 항목에 질문을 하나씩 던져, 같은 질문을 **Boot 문서만** 근거로(외부 출처를 넣기 전 상태: 수집 단계가 고른 문서 중 Spring Boot 문서만) 답한 것과 **외부 문서 포함**으로 답한 것을 비교했다. 1차 판정은 정답 키워드(외부 문서 원문에서 확인한 클래스·설정 이름) 포함 여부이고, 아래 표는 답변 전문을 읽고 확정했다.
+
+| 항목·버전 | 질문 | Boot 문서만 | 외부 문서 포함 |
+|---|---|---|---|
+| data-r2dbc 4.0.x | R2dbcEntityTemplate으로 조건 조회 | ✗ | ✓ `R2dbcEntityTemplate`, `Criteria` |
+| data-jpa 4.0.x | @EntityGraph로 연관 엔티티 함께 조회 | ✗ | ✓ `attributePaths` |
+| data-redis 3.5.x | RedisTemplate 직렬화 변경 | ✗ | ✓ `Jackson2JsonRedisSerializer` |
+| data-elasticsearch 4.1.x | 검색 쿼리 작성 | ✗ | ✓ `CriteriaQuery` |
+| kafka 4.0.x | 재시도 후 DLT | ✗ | ✓ `DeadLetterPublishingRecoverer` |
+| batch 4.0.x | 청크 기반 Step | ✗ | ✓ `StepBuilder` + `chunk` |
+| springdoc-openapi 3.5.x | Swagger UI 경로 변경 | ✗ (근거 없음) | ✓ `springdoc.swagger-ui.path` |
+| data-jdbc 4.1.x | 메서드 이름 쿼리로 join 되나? | △ `@Query`만 언급, join 가능 여부는 "확인되지 않는다" | ✓ "쿼리 유도는 join 없이 WHERE까지 → `@Query`" |
+| data-mongodb 4.0.x | MongoTemplate 집계 쿼리 | ✗ | △ Aggregation 지원·`Aggregation.stage`까지, `newAggregation` 없음 |
+| security 4.0.x | 특정 경로만 인증 없이 허용 | ✗ | △ `requestMatchers`·`securityMatcher`까지, `permitAll` 없음 (다른 실행에서는 나옴) |
+| oauth2-client 3.5.x | 구글 로그인 설정 | ✓ | ✓ (더 자세함) |
+| rabbitmq 3.5.x | 재시도 소진 시 메시지 처리 | ✓ | ✓ |
+| session-data-redis 3.4.x | 사용자 이름으로 세션 찾기 | ✗ | ✗ |
+
+**해석**
+- 13개 중 8개가 외부 문서로 바로 답할 수 있게 됐고(✗/△ → ✓), 2개는 나아졌지만 핵심 값이 빠졌다(✗ → △). Boot 문서는 자동 구성과 설정 속성까지만 다루고, 클래스 사용법(`R2dbcEntityTemplate`, `@EntityGraph`, `DeadLetterPublishingRecoverer` 등)은 각 프로젝트 문서에 있기 때문이다.
+- oauth2-client, rabbitmq는 Boot 문서에 이미 해당 설정이 설명돼 있어 차이가 작다.
+- session-data-redis는 원문에 이 질문을 다룬 가이드(`guides/boot-findbyusername.adoc`)가 있는데 수집 단계 프롬프트2가 고르지 않았고, 고른 `configuration/common.adoc`의 `FindByIndexNameSessionRepository` 청크는 검색 순위에서 밀렸다. 데이터가 아니라 문서 선택·검색 문제다.
+
+**한계**: 질문마다 1회 측정이다. security처럼 같은 질문도 실행마다 답이 달라질 수 있다.
