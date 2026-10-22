@@ -1,4 +1,4 @@
-// 버전 인지형 Spring Boot 문서 Q&A 화면. 대화는 (항목, 버전)마다 브라우저에 따로 저장한다. (F2008~F2012)
+// 버전핏 화면. 대화는 (항목, 버전)마다 브라우저에 따로 저장한다. (F2008~F2012)
 "use strict";
 
 const $ = (id) => document.getElementById(id);

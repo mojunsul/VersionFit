@@ -1,5 +1,5 @@
 # 프로젝트
-버전 인지형 Spring Boot 문서 Q&A (RAG). SSAFY AI 코어 프로젝트 2회차 제출물.
+버전핏 — 내 Spring Boot 버전에 맞는 공식 문서 Q&A (RAG). SSAFY AI 코어 프로젝트 2회차 제출물.
 - 명세: `AI코어프로젝트_2회차_요구사항정의서.pdf` (루트, gitignore, 對外秘라 커밋 금지). 필수 F2001~F2012는 수정 불가.
 - 기획: `docs/requirements.md`(요구사항 정의서), `docs/rag-design.md`(RAG 파이프라인 설계문서)
 - **진행 상황과 다음 작업: `docs/progress.md`를 먼저 읽는다.**

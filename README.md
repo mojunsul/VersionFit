@@ -1,4 +1,4 @@
-# 버전 인지형 Spring Boot 문서 Q&A
+# 버전핏 — 내 Spring Boot 버전에 맞는 공식 문서 Q&A
 
 Spring Initializr 의존성과 Spring Boot 버전을 고르면, **그 버전의 공식 문서를 근거로** 답하고 근거 문서를 함께 보여주는 RAG 서비스.
 

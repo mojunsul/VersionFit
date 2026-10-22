@@ -1,4 +1,4 @@
-"""버전 인지형 Spring Boot 문서 Q&A 웹 서버. API와 web/ 화면을 함께 제공한다. (F2002, F2008~F2012)
+"""버전핏 (버전 인지형 Spring Boot 문서 Q&A) 웹 서버. API와 web/ 화면을 함께 제공한다. (F2002, F2008~F2012)
 
 실행:
     uvicorn server:app          # 기본 http://127.0.0.1:8000 (로컬에서만 열림)
@@ -29,7 +29,7 @@ from vector_store.store import get_collection
 
 load_dotenv()
 log = logging.getLogger("uvicorn.error")
-app = FastAPI(title="Spring Boot 버전별 문서 Q&A")
+app = FastAPI(title="버전핏")
 ITEMS = {i["id"]: i for i in load_items()}
 FAILED = "답변을 만들지 못했습니다. 키와 네트워크를 확인한 뒤 다시 시도해 주세요."
 _collections = {}
