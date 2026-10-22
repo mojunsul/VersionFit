@@ -147,7 +147,7 @@ function selectTarget() {
   $("chat-area").hidden = !ready;
   $("chat-title").hidden = !ready;
   $("pick-hint").hidden = Boolean(item);
-  $("guide-btn").disabled = !ready || state.busy;
+  setBusy(state.busy); // 입력칸·버튼 활성 상태는 항목 선택에도 따라야 한다
   $("clear-btn").disabled = !item || state.blocked;
   $("unpick-btn").disabled = !item || state.blocked;
   if (item) {
@@ -359,7 +359,6 @@ async function init() {
     if (c) runExplore(c);
   });
   selectTarget();
-  setBusy(false);
 }
 
 // 상단 고정 영역의 높이만큼 답변 스크롤 위치를 내려, 답변 첫 줄이 고정 영역에 가리지 않게 한다
