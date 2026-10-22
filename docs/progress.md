@@ -110,6 +110,12 @@
   - "join sql 작성법"(Spring Data JDBC): 4.1.x는 예전 질문의 검색어별 선택 캐시 때문에 새 문서를 못 봄 → `fetch_docs`가 새 파일이 생긴 출처의 선택 캐시를 지우도록 수정. 이후 근거에 "Spring Data JDBC 4.1 문서"(Query Methods, Using @Query)가 붙지만 답은 여전히 "join 작성 예시는 확인되지 않는다". 원문에도 join 예시는 없고 "쿼리 메서드 이름 파생은 join 없이 WHERE에 쓸 수 있는 속성까지만" 한 줄뿐인데, 이 문장이 든 청크가 한국어 질문 검색 15위 안에 없음. verify 21/21.
 - 검색 질의에 영어 검색어 붙이기 (2026-10-22, rag-design.md 6.1-1): "join sql 작성법" 근거가 핵심 문장 청크 30위 → 9위, 근거 7개 중 Spring Data JDBC 2 → 5개, 답에 `@Query` 방법 포함. 5개 비교 질문(mmr): kafka 3,2 → 1,3, pulsar 2 → 1, web 2 → 2, springdoc 4.1.x 4 → 6, 3.5.x 3 → 4 (모두 7개 안). similarity로는 springdoc 4.1.x가 빠짐. compare_rag 판정 같음, verify 21/21.
 
+- Spring Data 1차 4개 모듈 (2026-10-22): spring-data-jpa·redis·mongodb·elasticsearch 모두 Apache-2.0, NOTICE 없음, `src/main/antora/modules/ROOT` 구조. spring-data-bom 2026.0.1 / 2025.1.7 / 2025.0.13 / 2024.1.13 → JPA·Redis·commons 4.1/4.0/3.5/3.4, MongoDB 5.1/5.0/4.5/4.4, Elasticsearch 6.1/6.0/5.5/5.4. 문서 주소 규칙은 relational과 같음 (4.1 짝 현재판 302, 4.0·3.5 짝 200, 3.4 짝 404).
+  - 판별 문서: JPA 33/33/31/31, Redis 44/41/41/41, MongoDB 55/54/52/51, Elasticsearch 30×4 (4.1→3.4). 남은 include 0.
+  - 다운로드 중 GitHub API 비로그인 한도(시간당 60회) 초과 → Trees API 결과를 `.tree.json`으로 캐시 (boot_docs.github_tree).
+  - 대표 질문: JPA 4.0.x @EntityGraph(근거 JPA 4.0 문서 4개), Redis 3.5.x 직렬화(Redis 3.5 문서 5개), MongoDB 4.0.x 집계(MongoDB 5.0 문서 5개), Elasticsearch 4.1.x 검색 쿼리(Elasticsearch 6.1 문서 7개). 모두 구체적인 클래스·예시로 답함. verify 21/21.
+- 출처 표기 (2026-10-22): README "출처와 라이선스" 절(저장소 9곳, Apache-2.0, 수정 고지)과 사이드바 하단 고지 추가.
+
 ## 4. 알려진 문제
 
 ### 4.1 한국어 조건 검색이 약함 (F2011)

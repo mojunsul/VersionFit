@@ -2,6 +2,7 @@
 
 원문은 GitHub에서 한 번만 받아 `paths.boot_docs_dir`에 저장한다. 서비스는 이 사본만 읽는다.
 """
+import json
 import re
 import time
 from pathlib import Path
@@ -49,13 +50,24 @@ def docs_dir(version: str) -> Path:
     return ROOT / CONFIG["paths"]["boot_docs_dir"] / version
 
 
+def github_tree(repo: str, branch: str, cache: Path) -> list[str]:
+    """브랜치의 파일 경로 목록 (Trees API). 비로그인 한도가 시간당 60회라 한 번 받은 목록은 cache 파일에 두고 다시 쓴다.
+    shortcut: 원문 브랜치에 새 파일이 생겨도 모른다. 새로 받으려면 cache 파일을 지운다."""
+    if cache.exists():
+        return json.loads(cache.read_text(encoding="utf-8"))
+    tree = http_get(f"https://api.github.com/repos/{repo}/git/trees/{branch}?recursive=1",
+                    Accept="application/vnd.github+json").json()
+    paths = [t["path"] for t in tree["tree"]]
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(paths), encoding="utf-8")
+    return paths
+
+
 def download(version: str) -> int:
     """버전의 문서 목록을 Trees API로 받고, 아직 없는 파일만 raw로 받는다. 받은 파일 수를 돌려준다."""
     base = VERSIONS[version]
-    tree = http_get(f"https://api.github.com/repos/{REPO}/git/trees/{version}?recursive=1",
-                Accept="application/vnd.github+json").json()
-    doc_ids = [t["path"][len(base) + 1:] for t in tree["tree"]
-               if t["path"].startswith(base + "/") and t["path"].endswith(".adoc")]
+    tree = github_tree(REPO, version, docs_dir(version) / ".tree.json")
+    doc_ids = [p[len(base) + 1:] for p in tree if p.startswith(base + "/") and p.endswith(".adoc")]
     doc_ids = [d for d in doc_ids if d.split("/")[0] in MODULES and "/pages/" in d]
     fetched = 0
     for doc_id in doc_ids:

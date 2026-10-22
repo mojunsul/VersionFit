@@ -14,7 +14,7 @@ Spring Initializr 의존성과 Spring Boot 버전을 고르면, **그 버전의 
 | 일반 지식 답변 (선택) | 문서에 답이 없을 때 버튼을 누르면 LLM 일반 지식으로 답하고, "문서 근거 없음"으로 구분해 표시. 문서 기반 답변은 그대로 둔다 |
 | 진행 상태·안내 | 수집·색인·생성 단계를 실시간 표시 (SSE). 키 없음, 색인 없음, 문서 근거 없음 안내 |
 
-출처: Spring Boot 레퍼런스 문서(spring-boot 저장소), springdoc-openapi 문서(3.x·2.x 판), Spring Data JDBC·R2DBC 문서(spring-data-relational·commons, Boot 버전별 판), Initializr 메타데이터. 이용 조건은 [requirements.md 1.1](docs/requirements.md).
+출처와 라이선스는 [아래 절](#출처와-라이선스), 수집 시 확인한 이용 조건은 [requirements.md 1.1](docs/requirements.md).
 
 ## 실행 (Windows)
 
@@ -44,6 +44,26 @@ copy .env.example .env                          # GMS_KEY 입력
 | `vector_store/` | ChromaDB 컬렉션(`items`, `docs`), 청킹 |
 | `data_prep/` | 외부 출처: Initializr, spring-boot 문서, 외부 문서(springdoc, Spring Data) |
 | `scripts/` | 배치(`build_items`, `fetch_docs`)와 비교·검증(`compare_search`, `compare_rag`, `verify`) |
+
+## 출처와 라이선스
+
+답변 근거는 아래 공개 저장소의 문서를 Boot 버전에 맞는 브랜치에서 받아 쓴다. 모두 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)이며, 저작권은 각 저장소의 원저작자에게 있다.
+
+| 출처 | 저장소 | 쓰는 곳 |
+|---|---|---|
+| Spring Boot 레퍼런스 문서 | [spring-projects/spring-boot](https://github.com/spring-projects/spring-boot) | 모든 의존성의 기본 근거 |
+| Spring Data JDBC·R2DBC | [spring-projects/spring-data-relational](https://github.com/spring-projects/spring-data-relational) | data-jdbc, data-r2dbc |
+| Spring Data 공통 문서 | [spring-projects/spring-data-commons](https://github.com/spring-projects/spring-data-commons) | Spring Data 문서가 include하는 페이지 |
+| Spring Data JPA | [spring-projects/spring-data-jpa](https://github.com/spring-projects/spring-data-jpa) | data-jpa |
+| Spring Data Redis | [spring-projects/spring-data-redis](https://github.com/spring-projects/spring-data-redis) | data-redis |
+| Spring Data MongoDB | [spring-projects/spring-data-mongodb](https://github.com/spring-projects/spring-data-mongodb) | data-mongodb |
+| Spring Data Elasticsearch | [spring-projects/spring-data-elasticsearch](https://github.com/spring-projects/spring-data-elasticsearch) | data-elasticsearch |
+| springdoc-openapi 문서 | [springdoc/springdoc.github.io](https://github.com/springdoc/springdoc.github.io) | springdoc-openapi |
+| Initializr 메타데이터 | [start.spring.io](https://start.spring.io) ([spring-io/start.spring.io](https://github.com/spring-io/start.spring.io)) | 의존성 목록, 버전별 좌표 |
+
+- **수정 고지**: 원문 AsciiDoc을 그대로 보여 주지 않는다. 매크로(`javadoc:`, `xref:` 등)를 글로 바꾸고, include와 조건 블록을 풀고, 헤더 단위로 잘라(청크) 답변 근거로 일부만 보여 준다. 근거마다 원문 링크를 붙인다.
+- 원문 사본(`data/boot_docs/`, `data/external_docs/`)은 저장소에 포함하지 않는다. `python -m scripts.fetch_docs`로 각자 받는다.
+- 확인한 저장소에는 NOTICE 파일이 없다 (2026-10-22).
 
 ## 문서
 
