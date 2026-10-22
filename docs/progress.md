@@ -96,6 +96,8 @@
 - similarity vs MMR (2026-10-22, 5개 질문, 표는 rag-design.md 6.1): MMR이 정답 근거를 뺀 경우 0. springdoc 4.1.x 정답 순위 7→3, web 4.0.x 고유 섹션 5→7, 나머지 동일. 색인 청크가 적은 (항목, 버전)(kafka 11, pulsar 24)은 차이 없음.
 - RAG 전후 비교 (2026-10-22, gpt-5.4-mini, 6문항, docs/rag-comparison.md): 사실 정확성 LLM만 2/5 → RAG 5/5, 근거 제시 0/5 → 5/5, 모름 응답 0/2 → 2/2. LLM만은 4.0 질문에 3.x 값으로 답하고(Kafka, Jackson), 사라진 리액티브 스타터를 "사용할 수 있다", 문서에 없는 브로커 힙을 "6GB"로 지어냄.
   - 단어 판정 보정: "없습니다"가 "단정할 수 없습니다"에 걸려 오판 → 모름 단어에서 제외, 틀린 주장 단어 추가. "Kafka 항목에서 GraphQL 질문"은 RAG가 Boot GraphQL 문서로 정확히 답해 모름 문항에서 제외.
+- 명세 4장 검증 (2026-10-22, docs/verification.md): `python -m scripts.verify` 자동 확인 20/20 통과. 화면 증명 7개(캡처 ①~⑦)는 미확인. 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
+  - 검사 보정: 조건 탐색 판정을 분류 정확 일치 → 'Messaging' 포함으로 (cloud-stream 분류가 'Spring Cloud Messaging'). '항목 자체 문서 포함'은 캐시 때문에 두 번째 실행부터 selected가 비어 Chroma 색인 여부로 판정.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 
 ## 4. 알려진 문제
@@ -130,7 +132,8 @@ items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113
 ## 5. 다음 작업 (순서대로)
 
 1. 브라우저에서 화면 동작 확인 (사용자)
-2. 검증(명세 4장) → 설계문서·README 보완
+2. 화면 캡처 ①~⑦ (사용자, docs/verification.md 캡처 목록) → verification.md 미확인 항목 갱신
+3. 상호 점검(옆 교육생), 설계문서·README 보완
 
 ## 6. 커밋 이력 요약
 - 기획 문서 → 라이브러리 버전·설정 → items 색인 (F2001, F2002)

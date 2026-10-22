@@ -21,6 +21,8 @@
 | github.com/spring-projects/spring-boot | 외부 문서 (Boot 레퍼런스 AsciiDoc) | Apache-2.0 (GitHub API로 확인) | 브랜치 4.1.x, 4.0.x, 3.5.x, 3.4.x |
 | GitHub REST API | 문서 파일 목록(후보) 조회 | GitHub API 약관, 인증 없이 시간당 60회 | 식별용 User-Agent 포함, 호출 간격 1초 이상 |
 | docs.spring.io | 원문 링크 표시용 (본문 수집은 하지 않음) | robots.txt: crawl-delay 1 | |
+| start.spring.io `/dependencies?bootVersion=` | 버전별 의존성 좌표 (F2010 가이드) | 위 메타데이터 API와 같음. 4.0.x·4.1.x만 지원(3.x는 400), 2026-10-21 확인 | 버전당 1회, `data/coordinates/`에 저장 |
+| github.com/springdoc/springdoc.github.io | 외부 문서 (springdoc-openapi 3.x·2.x AsciiDoc) | Apache-2.0 (GitHub API로 확인), springdoc.org robots.txt `Allow: /`, 2026-10-21 확인 | Boot 4.x → 3.x판, 3.4~3.5 → 2.x판 |
 
 ### 1.2 지원 버전
 
@@ -75,4 +77,4 @@
 
 ## 4. 검증
 
-명세 4장의 체크리스트로 점검하고 결과를 이 문서에 추가한다. (현재: 모두 미확인)
+명세 4장의 체크리스트로 점검한 결과는 [verification.md](verification.md)에 있다 (2026-10-22 셀프 점검, 화면 캡처 항목은 미확인).
