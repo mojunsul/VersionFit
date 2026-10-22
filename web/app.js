@@ -260,7 +260,7 @@ async function runExplore(condition) {
 function renderItemOptions(filter) {
   const q = filter.trim().toLowerCase();
   const shown = state.items.filter((i) => !q || `${i.name} ${i.id} ${i.group}`.toLowerCase().includes(q));
-  $("item-select").replaceChildren(...shown.map((i) => el("option", { value: i.id }, `${i.name} (${i.group})`)));
+  $("item-select").replaceChildren(...shown.map((i) => el("option", { value: i.id, title: `${i.name} (${i.group})` }, `${i.name} (${i.group})`)));
   if (state.itemId) $("item-select").value = state.itemId;
 }
 function showVersionWarning() {
