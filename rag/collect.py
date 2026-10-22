@@ -22,11 +22,11 @@ from vector_store.store import get_collection
 load_dotenv()
 
 
-def chat_model() -> ChatOpenAI:
+def chat_model(role: str = "chat") -> ChatOpenAI:
     key = os.environ.get("GMS_KEY")
     if not key:
         raise RuntimeError("GMS_KEY가 없습니다. .env를 확인하세요.")
-    return ChatOpenAI(model=CONFIG["models"]["chat"], api_key=key, base_url=CONFIG["models"]["base_url"])
+    return ChatOpenAI(model=CONFIG["models"][role], api_key=key, base_url=CONFIG["models"]["base_url"])
 
 
 def json_list(text: str) -> list:

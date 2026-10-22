@@ -1,6 +1,6 @@
 # 명세 4장 자동 확인 실행 결과
 
-2026-10-22 `python -m scripts.verify` 실행 출력 그대로 (답변 모델 `gpt-6.1-sol`). 항목별 판정과 화면 증거는 [verification.md](verification.md).
+2026-10-22 `python -m scripts.verify` 실행 출력 그대로 (답변 모델 `gpt-5.4-mini`, 일반 지식 답변 `gpt-6.1-sol`). 항목별 판정과 화면 증거는 [verification.md](verification.md).
 
 
 ## 4.1 데이터와 색인 (F2001~F2002)
@@ -44,22 +44,22 @@
     	classDef first fill-opacity:0
     	classDef last fill:#bfb6fc
 - [통과] LangGraph가 retrieve·generate 두 노드다 — 노드 ['generate', 'retrieve']
-  문서에 없는 질문 답: Spring Boot 4.0.x 기준, Kafka 브로커에 권장되는 JVM 힙 메모리 크기는 제공된 문서에서 확인되지 않는다.
+  문서에 없는 질문 답: Spring Boot 4.0.x 기준, Kafka 브로커에 권장되는 JVM 힙 메모리 크기는 **문서에서 확인되지 않는다**. [근거 1, 2, 4, 6]  근거 문서에는 `Spring for Apache Kafka
 - [통과] 문서에 없는 것을 물으면 확인되지 않는다고 답한다
 
 ## 4.4 서비스 기능과 화면 (F2009~F2012)
-  '메시징 큐' 탐색: [('rabbitmq', 'Messaging'), ('artemis', 'Messaging'), ('activemq', 'Messaging'), ('pulsar', 'Messaging'), ('solace', 'Messaging'), ('cloud-gcp-pubsub', 'Google Cloud'), ('kafka', 'Messaging'), ('cloud-stream', 'Spring Cloud Messaging')]
-- [통과] 조건 탐색 결과 대부분이 메시징 분류이고, 메시징과 무관한 항목이 없다 — 메시징 분류 7/8
+  '메시징 큐' 탐색: [('rabbitmq', 'Messaging'), ('kafka', 'Messaging'), ('pulsar', 'Messaging'), ('activemq', 'Messaging'), ('artemis', 'Messaging'), ('solace', 'Messaging'), ('cloud-stream', 'Spring Cloud Messaging'), ('integration', 'Messaging')]
+- [통과] 조건 탐색 결과 대부분이 메시징 분류이고, 메시징과 무관한 항목이 없다 — 메시징 분류 8/8
 - [통과] 조건과 무관한 항목을 섞지 않는다 (무관한 조건 → 빈 결과) — []
 - [통과] 특화 기능(가이드) 결과에 근거가 함께 있다 — ['Initializr 의존성 좌표 (4.0.8.RELEASE)', 'Initializr 항목 정보', 'Spring Boot 4.0.x 문서', 'Spring for Apache Kafka 4.0 문서']
 - [통과] 수집·생성 중 진행 단계가 전달된다 (SSE step) — ['이미 수집한 검색어라 수집을 건너뜀', '이미 색인된 문서로 답합니다', '답변을 만드는 중']
-  일반 지식 답변: 공식 문서 근거 없이 일반 지식으로 답한다.  Kafka 브로커의 JVM 힙은 **운영 환경에서 보통 6GB 정도를 시작점으로 잡고**, 실제 부하와 GC 지표를 보며 조정한다. 모든 환경에 적용되는 고정 권장값은 
+  일반 지식 답변: 공식 문서 근거 없이 일반 지식으로 답한다.  **Kafka 브로커의 JVM 힙은 운영 환경에서 보통 6GB 정도를 시작점으로 고려**할 수 있습니다. 다만 이는 모든 환경에 적용되는 고정 권장값은 아닙니다.  - 
 - [통과] 문서에 없을 때 요청하면 근거 없는 일반 지식 답변을 따로 준다
 - [통과] API 키가 없으면 상태에 표시된다 (화면 배너) — {'gms_key': False, 'items_total': None, 'versions': ['4.1.x', '4.0.x', '3.5.x', '3.4.x'], 'missing_docs': []}
 - [통과] 항목 색인이 없으면 상태에 표시된다 (화면 배너) — {'gms_key': True, 'items_total': 0, 'versions': ['4.1.x', '4.0.x', '3.5.x', '3.4.x'], 'missing_docs': []}
 
 ## 4.7 비기능 (NF2001~NF2007)
-- [통과] 대표 질문 처리 시간 (NF2001) — 이미 색인된 질문 7.2초, 4.2 수집 단계 0.2초 (처음 수집이면 수집 시간, 이후엔 캐시)
+- [통과] 대표 질문 처리 시간 (NF2001) — 이미 색인된 질문 2.8초, 4.2 수집 단계 0.2초 (처음 수집이면 수집 시간, 이후엔 캐시)
 - [통과] 저장소와 git 이력에 API 키가 없다 (NF2003) — .env gitignore=True, 이력·추적 파일 검색 결과 0건
 요청 처리 실패
 Traceback (most recent call last):

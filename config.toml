@@ -1,7 +1,8 @@
 # 검색·색인 설정. 값을 바꿔 색인/검색 결과 차이를 비교한다.
 [models]
 embedding = "text-embedding-3-small"
-chat = "gpt-6.1-sol"  # mini 대비 비교는 progress.md 3절 (2026-10-22)
+chat = "gpt-5.4-mini"  # 수집·문서 근거 답변·탐색. 근거가 답을 정해 sol과 판정이 같고 더 빠르다 (rag-design.md 6.2)
+general = "gpt-6.1-sol"  # 일반 지식 답변. 근거 없이 모델 지식으로 답해 최신 지식이 많은 모델 (rag-comparison.md 2.1)
 base_url = "https://gms.ssafy.io/gmsapi/api.openai.com/v1/"
 
 [chunk]

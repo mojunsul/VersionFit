@@ -89,7 +89,7 @@ def generate(state: State) -> State:
 
 def general(item: dict, version: str, question: str) -> str:
     """문서에 답이 없을 때 사용자가 요청하면 근거 없이 일반 지식으로 답한다. 그래프와 근거 목록을 거치지 않는다."""
-    return chat_model().invoke(GENERAL.format(name=item["name"], version=version, question=question)).content
+    return chat_model("general").invoke(GENERAL.format(name=item["name"], version=version, question=question)).content
 
 
 def _build():

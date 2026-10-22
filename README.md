@@ -50,7 +50,7 @@ copy .env.example .env                          # GMS_KEY 입력
 |---|---|---|---|
 | F2013 | 프론트엔드 직접 구현 | FastAPI(`server.py`) + HTML·CSS·JS(`web/`), 진행 상태는 SSE | 화면 캡처 ([검증 결과](docs/verification.md)) |
 | F2014 | MMR 검색 | 기본 검색 방식 MMR (fetch_k 30, lambda_mult 0.6) | 유사도 검색과 비교 ([설계문서 6.1](docs/rag-design.md)) |
-| F2015 | RAG 전후 비교 | 대표 질문 6개를 LLM만 / RAG로 답해 3개 기준 비교 | gpt-5.4-mini: 사실 정확성 2/5 → 5/5, 근거 0/5 → 5/5, 모름 0/2 → 2/2. 현재 모델 gpt-6.1-sol: 정확성 5/5 → 5/5, 근거 0/5 → 5/5, 지어내지 않음 1/2 → 2/2 ([비교](docs/rag-comparison.md)) |
+| F2015 | RAG 전후 비교 | 대표 질문 6개를 LLM만 / RAG로 답해 3개 기준 비교 | gpt-5.4-mini: 사실 정확성 2/5 → 5/5, 근거 0/5 → 5/5, 모름 0/2 → 2/2. gpt-6.1-sol(일반 지식 답변 모델): 정확성 5/5 → 5/5, 근거 0/5 → 5/5, 지어내지 않음 1/2 → 2/2 ([비교](docs/rag-comparison.md)) |
 | F2016 | 여러 문서 출처 결합 | Spring Boot 문서 + 39개 항목의 프로젝트 문서, 근거에 출처 종류·판 표시 | 14개 질문 중 11개 개선 ([비교 4절](docs/rag-comparison.md)) |
 
 ## 구조
