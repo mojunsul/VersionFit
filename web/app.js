@@ -100,6 +100,7 @@ function selectTarget() {
   $("pick-hint").hidden = Boolean(item);
   $("guide-btn").disabled = !ready || state.busy;
   $("clear-btn").disabled = !item;
+  $("unpick-btn").disabled = !item;
   if (item) {
     $("chat-title").textContent = `${item.name} · Spring Boot ${state.version}`;
     $("ask-input").placeholder = `${item.name} (${state.version})에 대해 궁금한 점을 물어보세요`;
@@ -261,6 +262,14 @@ async function init() {
   $("item-select").addEventListener("change", (e) => { state.itemId = e.target.value; selectTarget(); });
   $("version-select").addEventListener("change", (e) => { state.version = e.target.value; selectTarget(); });
   $("clear-btn").addEventListener("click", () => { saveChat([]); renderChat(); });
+  $("unpick-btn").addEventListener("click", () => {
+    // 대화 기록은 남기고 선택만 비운다. 새로고침해도 빈 상태로 시작하게 저장된 마지막 항목도 지운다
+    state.itemId = null;
+    try { localStorage.removeItem("last-item"); } catch { /* 저장 불가 */ }
+    $("item-select").value = "";
+    $("explore").open = true;
+    selectTarget();
+  });
   $("guide-btn").addEventListener("click", () => send("guide", "📘 버전 맞춤 사용 가이드 (의존성 선언 · 핵심 설정 · import)"));
   $("ask-form").addEventListener("submit", (e) => {
     e.preventDefault();
