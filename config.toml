@@ -1,7 +1,7 @@
 # 검색·색인 설정. 값을 바꿔 색인/검색 결과 차이를 비교한다.
 [models]
 embedding = "text-embedding-3-small"
-chat = "gpt-5.4-mini"  # nano 대비 복합 질문 정확도 높음 (progress.md 3절)
+chat = "gpt-6.1-sol"  # mini 대비 비교는 progress.md 3절 (2026-10-22)
 base_url = "https://gms.ssafy.io/gmsapi/api.openai.com/v1/"
 
 [chunk]
