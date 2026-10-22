@@ -21,8 +21,6 @@
     <select id="version-select"></select>
     <p id="index-status" class="caption"></p>
     <button id="guide-btn" disabled>📘 버전 맞춤 사용 가이드</button>
-    <button id="clear-btn" class="secondary" disabled>이 대화 지우기</button>
-    <button id="unpick-btn" class="secondary" disabled>선택 해제</button>
   </aside>
 
   <main>
@@ -42,7 +40,14 @@
       <p id="explore-status" class="caption"></p>
       <div id="explore-cards" class="cards"></div>
     </details>
-    <h3 id="chat-title" hidden></h3>
+    <div id="chat-title" hidden>
+      <span id="title-item" class="pill item"></span>
+      <span id="title-version" class="pill version"></span>
+      <span class="title-actions">
+        <button id="unpick-btn" type="button" class="secondary small" disabled>선택 해제</button>
+        <button id="clear-btn" type="button" class="secondary small" disabled>🗑 대화 지우기</button>
+      </span>
+    </div>
     </div>
 
     <section id="chat-area" hidden>

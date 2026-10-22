@@ -109,6 +109,8 @@ form button { flex-shrink: 0; }
 .pill { padding: 4px 14px; border-radius: 999px; font-size: 1.05rem; font-weight: 700; }
 .pill.item { background: var(--accent); color: var(--accent-text); }
 .pill.version { background: var(--accent-soft); color: var(--text); }
+.title-actions { margin-left: auto; display: flex; gap: 6px; }
+button.small { padding: 4px 12px; font-size: .85rem; }
 /* 사이드바에서도 고른 의존성과 버전이 눈에 띄게 (포커스가 없어도 강조색 유지) */
 #item-select option:checked { background: linear-gradient(var(--accent), var(--accent)); color: var(--accent-text); font-weight: 600; }
 #version-select { border: 2px solid var(--accent); font-weight: 700; }

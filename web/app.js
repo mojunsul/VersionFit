@@ -3,7 +3,7 @@
 
 const $ = (id) => document.getElementById(id);
 const CITE = /\[근거\s*([\d,\s]+)\]/g;
-const state = { items: [], byId: {}, itemId: null, version: null, busy: false };
+const state = { items: [], byId: {}, itemId: null, version: null, busy: false, pending: null }; // pending: 진행 중인 요청 { key, controller }
 
 // ---------- 저장 (F2009) ----------
 const chatKey = () => `chat:${state.itemId}|${state.version}`;
@@ -150,8 +150,8 @@ function selectTarget() {
   $("clear-btn").disabled = !item || state.blocked;
   $("unpick-btn").disabled = !item || state.blocked;
   if (item) {
-    $("chat-title").replaceChildren(el("span", { className: "pill item" }, item.name),
-      el("span", { className: "pill version" }, `Spring Boot ${state.version}`));
+    $("title-item").textContent = item.name;
+    $("title-version").textContent = `Spring Boot ${state.version}`;
     $("ask-input").placeholder = `${item.name} (${state.version})에 대해 궁금한 점을 물어보세요`;
     $("item-select").value = state.itemId;
     remember("last-item", state.itemId);
@@ -163,8 +163,8 @@ function selectTarget() {
 }
 
 // ---------- SSE 요청 (F2012 진행 상태) ----------
-async function streamRequest(url, payload, onStep) {
-  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+async function streamRequest(url, payload, onStep, signal) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal });
   if (!res.ok || !res.body) {
     const body = await res.json().catch(() => ({}));
     throw new Error(typeof body.detail === "string" ? body.detail : "요청을 처리하지 못했습니다.");
@@ -193,6 +193,10 @@ async function send(kind, question) {
   if (state.busy) return;
   state.busy = true;
   const target = { item_id: state.itemId, version: state.version };
+  // 응답이 오는 동안 사용자가 항목·버전을 바꿨을 수 있어 원래 대화에 저장한다
+  const key = chatKey();
+  const controller = new AbortController();
+  state.pending = { key, controller };
   const messages = loadChat();
   const user = { role: "user", content: question };
   messages.push(user);
@@ -211,13 +215,11 @@ async function send(kind, question) {
     const result = await streamRequest(url, kind === "guide" ? target : { ...target, question }, (step) => {
       label.textContent = step;
       steps.append(el("li", {}, step));
-    });
+    }, controller.signal);
     status.open = false;
     label.textContent = kind === "guide" ? "가이드 준비 완료" : "근거 준비 완료";
     const reply = { role: "assistant", content: result.answer, sources: result.sources, notice: result.notice };
     if (kind === "ask") Object.assign(reply, { question, ...target }); // 일반 지식 답변 버튼이 같은 질문을 다시 보낸다
-    // 응답이 오는 동안 사용자가 항목·버전을 바꿨을 수 있어 원래 대화에 저장한다
-    const key = `chat:${target.item_id}|${target.version}`;
     const saved = (() => { try { return JSON.parse(localStorage.getItem(key)) || messages; } catch { return messages; } })();
     saved.push(reply);
     try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 저장 불가 */ }
@@ -227,8 +229,10 @@ async function send(kind, question) {
       node.scrollIntoView({ behavior: "smooth", block: "start" }); // 긴 답변도 첫 줄부터 읽게 한다
     }
   } catch (err) {
-    status.replaceWith(el("p", { className: "error" }, err.message));
+    if (controller.signal.aborted) status.remove(); // 대화를 지워 취소한 요청은 오류로 보이지 않는다
+    else status.replaceWith(el("p", { className: "error" }, err.message));
   } finally {
+    state.pending = null;
     state.busy = false;
     setBusy(false);
   }
@@ -318,7 +322,11 @@ async function init() {
   $("item-filter").addEventListener("input", (e) => renderItemOptions(e.target.value));
   $("item-select").addEventListener("change", (e) => { state.itemId = e.target.value; selectTarget(); });
   $("version-select").addEventListener("change", (e) => { state.version = e.target.value; selectTarget(); });
-  $("clear-btn").addEventListener("click", () => { saveChat([]); renderChat(); });
+  $("clear-btn").addEventListener("click", () => {
+    if (state.pending?.key === chatKey()) state.pending.controller.abort(); // 지운 대화로 늦게 오는 답을 받지 않는다
+    saveChat([]);
+    renderChat();
+  });
   $("unpick-btn").addEventListener("click", () => {
     // 대화 기록은 남기고 선택만 비운다. 새로고침해도 빈 상태로 시작하게 저장된 마지막 항목도 지운다
     state.itemId = null;
