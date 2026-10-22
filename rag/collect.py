@@ -73,6 +73,17 @@ def _save_log(log: dict[str, list[str]]) -> None:
     path.write_text(json.dumps(log, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def forget(item_id: str) -> int:
+    """항목의 검색어별 문서 선택 기록을 지운다. 후보 문서(출처)가 늘면 예전 선택은 새 문서를 못 보기 때문이다.
+    질문별 검색어 기록은 그대로 둔다. 지운 개수를 돌려준다."""
+    log = _load_log()
+    stale = [k for k in log if k.startswith(f"{item_id}|")]
+    for k in stale:
+        del log[k]
+    _save_log(log)
+    return len(stale)
+
+
 def _is_indexed(col, item_id: str, version: str, doc_id: str) -> bool:
     where = {"$and": [{"item_id": item_id}, {"boot_version": version}, {"doc_id": doc_id}]}
     return bool(col.get(where=where, limit=1)["ids"])

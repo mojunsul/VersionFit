@@ -14,7 +14,7 @@ Spring Initializr 의존성과 Spring Boot 버전을 고르면, **그 버전의 
 | 일반 지식 답변 (선택) | 문서에 답이 없을 때 버튼을 누르면 LLM 일반 지식으로 답하고, "문서 근거 없음"으로 구분해 표시. 문서 기반 답변은 그대로 둔다 |
 | 진행 상태·안내 | 수집·색인·생성 단계를 실시간 표시 (SSE). 키 없음, 색인 없음, 문서 근거 없음 안내 |
 
-출처: Spring Boot 레퍼런스 문서(spring-boot 저장소), springdoc-openapi 문서(3.x·2.x 판), Initializr 메타데이터. 이용 조건은 [requirements.md 1.1](docs/requirements.md).
+출처: Spring Boot 레퍼런스 문서(spring-boot 저장소), springdoc-openapi 문서(3.x·2.x 판), Spring Data JDBC·R2DBC 문서(spring-data-relational·commons, Boot 버전별 판), Initializr 메타데이터. 이용 조건은 [requirements.md 1.1](docs/requirements.md).
 
 ## 실행 (Windows)
 
@@ -42,7 +42,7 @@ copy .env.example .env                          # GMS_KEY 입력
 | `services/` | 버전 맞춤 사용 가이드, 조건 기반 탐색 |
 | `rag/` | 프롬프트, 질문 시점 수집(검색어 추출 → 후보 → 선별 → 색인), LangGraph retrieve → generate |
 | `vector_store/` | ChromaDB 컬렉션(`items`, `docs`), 청킹 |
-| `data_prep/` | 외부 출처: Initializr, spring-boot 문서, springdoc 문서 |
+| `data_prep/` | 외부 출처: Initializr, spring-boot 문서, 외부 문서(springdoc, Spring Data) |
 | `scripts/` | 배치(`build_items`, `fetch_docs`)와 비교·검증(`compare_search`, `compare_rag`, `verify`) |
 
 ## 문서

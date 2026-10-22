@@ -102,6 +102,12 @@
 - 일반 지식 답변 (2026-10-22, 사용자 결정: 버튼을 눌렀을 때만 생성): Spring Data JDBC 4.0.x "join sql 작성법"이 Boot 문서만으로는 "확인되지 않는다". 답이 "확인되지 않"을 포함하거나 인용 근거가 없을 때 버튼 → `/api/general`(`rag.graph.general`, 프롬프트 `GENERAL`). F2007(문서에 없으면 확인되지 않는다)을 지키려고 문서 기반 답변과 분리해 표시. verify 21/21. 모델이 규칙과 달리 끝에 추가 도움 제안을 붙이는 경우가 있음. 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
   - 검사 보정: 조건 탐색 판정을 분류 정확 일치 → 'Messaging' 포함으로 (cloud-stream 분류가 'Spring Cloud Messaging'). '항목 자체 문서 포함'은 캐시 때문에 두 번째 실행부터 selected가 비어 Chroma 색인 여부로 판정.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
+- Spring Data JDBC·R2DBC 외부 문서 (2026-10-22): 저장소 spring-projects/spring-data-relational(Apache-2.0), 본문 일부는 spring-data-commons(Apache-2.0) 같은 판 페이지를 include. 네 브랜치(4.1.x/4.0.x/3.5.x/3.4.x) 모두 `src/main/antora/modules/ROOT/` 같은 구조.
+  - Boot ↔ Spring Data: Boot 브랜치 spring-boot-dependencies의 Spring Data Bom이 4.1.x 2026.0.2-SNAPSHOT, 4.0.x 2025.1.8-SNAPSHOT, 3.5.x 2025.0.13, 3.4.x 2024.1.13. Maven Central BOM의 spring-data-jdbc는 2026.0.1 → 4.1.1, 2025.1.7 → 4.0.7, 2025.0.13 → 3.5.13, 2024.1.13 → 3.4.13.
+  - 원문 링크: docs.spring.io/spring-data/relational/reference/{4.0,3.5}/… 200, 4.1은 현재판(302 → /reference/…), 3.4는 404라 GitHub 원문으로 링크.
+  - 수집 결과: data-jdbc 판별 문서 35/34/33/32, data-r2dbc 32/31/31/30 (4.1→3.4). 남은 include 0. `example$` include(빌드 때 테스트 소스에서 복사되는 예제 코드)는 저장소 문서 폴더에 없어 지움.
+  - springdoc도 같은 방식으로 옮김. 본문은 그대로이고 조건 지시어 62쌍과 머리말 속성 줄만 빠짐 (전후 비교).
+  - "join sql 작성법"(Spring Data JDBC): 4.1.x는 예전 질문의 검색어별 선택 캐시 때문에 새 문서를 못 봄 → `fetch_docs`가 새 파일이 생긴 출처의 선택 캐시를 지우도록 수정. 이후 근거에 "Spring Data JDBC 4.1 문서"(Query Methods, Using @Query)가 붙지만 답은 여전히 "join 작성 예시는 확인되지 않는다". 원문에도 join 예시는 없고 "쿼리 메서드 이름 파생은 join 없이 WHERE에 쓸 수 있는 속성까지만" 한 줄뿐인데, 이 문장이 든 청크가 한국어 질문 검색 15위 안에 없음. verify 21/21.
 
 ## 4. 알려진 문제
 

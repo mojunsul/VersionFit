@@ -47,7 +47,7 @@
 
 사전 색인으로 대표 항목을 미리 채워 둘 수 있고, 같은 코드가 질문 시점에도 동작한다.
 
-**외부 문서 출처 (`data_prep/external_docs.py`)**: 항목 id가 `SOURCES`에 있으면 그 문서도 후보 검색에 넣는다. 지금은 springdoc-openapi. Boot 버전마다 호환되는 판을 쓴다 (4.x → springdoc 3.x 문서, 3.4~3.5 → 2.x 문서). doc_id는 `출처:경로`(예: `springdoc-openapi:v2/features.adoc`), 청크 메타데이터 `source_type`은 표시 이름("springdoc-openapi 2.x 문서"), `source_url`은 판별 원문 링크.
+**외부 문서 출처 (`data_prep/external_docs.py`)**: 항목 id가 `SOURCES`에 있으면 그 문서도 후보 검색에 넣는다. springdoc-openapi, Spring Data JDBC·R2DBC. Boot 버전마다 호환되는 판을 쓴다 (springdoc: 4.x → 3.x 문서, 3.4~3.5 → 2.x 문서. Spring Data: Boot 4.1/4.0/3.5/3.4 → 모듈 4.1/4.0/3.5/3.4 브랜치). 판마다 브랜치와 폴더를 지정하고, 사본은 `data/external_docs/{저장소}/{브랜치}/`에 둔다. Antora 문서의 `include::partial$…`, `include::{commons}@data-commons::page$…`(spring-data-commons 같은 판), 같은 폴더 상대 include를 풀고, `ifdef/ifndef/ifeval`과 본문 속성 정의(`:이름: 값`)를 처리한다. doc_id는 `출처:경로`(예: `springdoc-openapi:v2/features.adoc`), 청크 메타데이터 `source_type`은 표시 이름("springdoc-openapi 2.x 문서"), `source_url`은 판별 원문 링크.
 
 ## 4. 검색과 병합 (F2006, F2014)
 
@@ -153,4 +153,5 @@ nano는 검색된 근거에 `KafkaProperties` 전체 이름이 있어도 뒤 물
 - 조건 탐색 프롬프트 예시에 테스트 조건("메시징 큐 → Kafka, RabbitMQ")을 넣어 결과를 믿을 수 없었다. 무관한 예시로 바꿔 재확인했다. 무관한 조건에도 항목을 억지로 골라 "목적과 무관하면 고르지 않는다" 규칙을 넣었다.
 - RAG 전후 비교의 단어 판정에서 "단정할 수 없습니다"의 "없습니다"가 모름 응답으로 잡혀, 틀린 답이 맞게 판정됐다. 판정 단어를 좁히고 답변 전문을 직접 읽어 확정했다.
 - items 204건 중 Spring Boot 문서로 설명되는 항목은 73건뿐이다. SpringDoc처럼 외부 문서 항목은 근거가 Initializr 정보뿐이라, 외부 문서를 두 번째 출처로 추가했다. 외부 문서도 버전이 있어(springdoc 2.x/3.x) Boot 버전에 맞는 판을 고른다.
+- Spring Data JDBC 문서를 추가했는데도 예전에 한 질문은 새 문서를 보지 못했다. 검색어별 문서 선택이 캐시돼 있었기 때문이다. `fetch_docs`가 어떤 출처에 새 파일을 받으면 그 항목의 검색어별 선택 기록을 지운다 (`collect.forget`).
 - 검색을 (항목, 버전)으로만 거르니, 다른 질문으로 수집한 문서가 정답을 밀어냈다. Kafka 4.0.x에 검증 스크립트의 오류 시험 질문이 실제로 수집한 Testing 문서(105청크)가 쌓여, "JSON 역직렬화" 질문 근거가 `@JsonTest` 섹션으로 채워지고 답이 "확인되지 않는다"가 됐다 (화면 캡처에서 발견). 수집 단계가 이 질문용 `doc_ids`를 돌려주고 검색은 그 문서 안에서만 하도록 바꿨다. 정답 근거가 순위 밖 → 1위. 검증 스크립트의 오류 시험은 수집도 가짜로 바꿨다.
