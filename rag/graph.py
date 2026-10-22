@@ -8,7 +8,7 @@ from langgraph.graph import END, START, StateGraph
 
 from config import CONFIG
 from rag.collect import chat_model
-from rag.prompts import ANSWER
+from rag.prompts import ANSWER, GENERAL
 from vector_store.store import get_collection
 
 
@@ -69,6 +69,11 @@ def generate(state: State) -> State:
     prompt = ANSWER.format(name=state["item"]["name"], version=state["version"],
                            context=context, question=state["question"])
     return {"answer": chat_model().invoke(prompt).content}
+
+
+def general(item: dict, version: str, question: str) -> str:
+    """문서에 답이 없을 때 사용자가 요청하면 근거 없이 일반 지식으로 답한다. 그래프와 근거 목록을 거치지 않는다."""
+    return chat_model().invoke(GENERAL.format(name=item["name"], version=version, question=question)).content
 
 
 def _build():

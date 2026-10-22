@@ -19,7 +19,7 @@
 
 | 경로 | 책임 |
 |---|---|
-| `server.py` | FastAPI 진입점. `/api/*`(상태, 항목, 질문·가이드 SSE, 조건 탐색)와 `web/` 정적 화면 제공. 오류 추적은 서버 콘솔에만 |
+| `server.py` | FastAPI 진입점. `/api/*`(상태, 항목, 질문·가이드 SSE, 조건 탐색, 일반 지식 답변)와 `web/` 정적 화면 제공. 오류 추적은 서버 콘솔에만 |
 | `web/` | HTML·CSS·JS 화면. 조건 탐색 카드, 항목·버전 선택, (항목, 버전)별 대화(localStorage), 진행 상태, 인용 근거 표시. marked·DOMPurify(cdnjs) |
 | `config.toml` / `config.py` | 설정 / `CONFIG`, `ROOT` 로드 (루트 기준 경로 계산 때문에 루트에 둔다) |
 | `scripts/` | 배치 스크립트. 루트에서 `python -m scripts.<이름>`으로 실행. `build_items`(items 색인), `fetch_docs`(문서 원문 수집), `compare_search`·`compare_rag`(F2014·F2015 비교), `verify`(명세 4장 자동 확인) |

@@ -22,7 +22,7 @@ from config import ROOT
 from data_prep.boot_docs import VERSIONS, doc_id_for_item, docs_dir
 from data_prep.initializr import load_items
 from rag.collect import collect
-from rag.graph import answer
+from rag.graph import answer, general
 from services.explore import explore
 from services.guide import guide
 from vector_store.store import get_collection
@@ -142,6 +142,18 @@ def ask(body: Ask):
         return {**result, "notice": no_docs_notice(item, version, result["sources"], retry_hint=True)}
 
     return _stream(work)
+
+
+
+@app.post("/api/general")
+def general_api(body: Ask):
+    """문서 근거 없는 일반 지식 답변. 화면에서 사용자가 버튼을 눌렀을 때만 호출된다."""
+    item, version = _item(body.item_id), _version(body.version)
+    try:
+        return {"answer": general(item, version, body.question.strip())}
+    except Exception:
+        log.exception("일반 지식 답변 실패")
+        raise HTTPException(502, FAILED)
 
 
 @app.post("/api/guide")

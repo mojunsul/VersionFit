@@ -125,6 +125,11 @@ def main():
     steps = [d for e, d in sse_events(client, "/api/ask", {"item_id": "kafka", "version": "4.0.x",
                                                            "question": "JSON 값 역직렬화 설정에는 어떤 클래스를 쓰나?"}) if e == "step"]
     check("수집·생성 중 진행 단계가 전달된다 (SSE step)", len(steps) >= 2, str(steps))
+    res = client.post("/api/general", json={"item_id": "kafka", "version": "4.0.x", "question": unknown_q})
+    general = res.json().get("answer", "")
+    print("  일반 지식 답변:", general[:120].replace("\n", " "))
+    check("문서에 없을 때 요청하면 근거 없는 일반 지식 답변을 따로 준다",
+          res.status_code == 200 and "일반 지식" in general and "[근거" not in general)
     with mock.patch.dict(os.environ, {"GMS_KEY": ""}):
         status = client.get("/api/status").json()
     check("API 키가 없으면 상태에 표시된다 (화면 배너)", status["gms_key"] is False, str(status))

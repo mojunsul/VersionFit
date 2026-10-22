@@ -98,7 +98,8 @@
   - 범위 제한 후 재측정: lambda_mult 0.5에서 springdoc 4.1.x 정답이 빠짐 (FAQ 한 문서 104청크, 비슷한 섹션 다수) → 0.5~0.8 비교 후 0.6 (정답 4위, similarity 7위). verify 20/20. 조건 탐색 검사는 cloud-gcp-pubsub(Google Cloud 분류) 때문에 한 번 실패 → "대부분 Messaging + 나머지도 설명이 메시징"으로 판정 변경.
 - RAG 전후 비교 (2026-10-22, gpt-5.4-mini, 6문항, docs/rag-comparison.md): 사실 정확성 LLM만 2/5 → RAG 5/5, 근거 제시 0/5 → 5/5, 모름 응답 0/2 → 2/2. LLM만은 4.0 질문에 3.x 값으로 답하고(Kafka, Jackson), 사라진 리액티브 스타터를 "사용할 수 있다", 문서에 없는 브로커 힙을 "6GB"로 지어냄.
   - 단어 판정 보정: "없습니다"가 "단정할 수 없습니다"에 걸려 오판 → 모름 단어에서 제외, 틀린 주장 단어 추가. "Kafka 항목에서 GraphQL 질문"은 RAG가 Boot GraphQL 문서로 정확히 답해 모름 문항에서 제외.
-- 명세 4장 검증 (2026-10-22, docs/verification.md): `python -m scripts.verify` 자동 확인 20/20 통과. 화면 증명 캡처 ①~⑦ 완료 (③은 3장, ⑤는 2장, 근거 오염 수정 후 재촬영). verification.md 미확인 항목 없음. 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
+- 명세 4장 검증 (2026-10-22, docs/verification.md): `python -m scripts.verify` 자동 확인 20/20 통과. 화면 증명 캡처 ①~⑦ 완료 (③은 3장, ⑤는 2장, 근거 오염 수정 후 재촬영). verification.md 미확인 항목 없음.
+- 일반 지식 답변 (2026-10-22, 사용자 결정: 버튼을 눌렀을 때만 생성): Spring Data JDBC 4.0.x "join sql 작성법"이 Boot 문서만으로는 "확인되지 않는다". 답이 "확인되지 않"을 포함하거나 인용 근거가 없을 때 버튼 → `/api/general`(`rag.graph.general`, 프롬프트 `GENERAL`). F2007(문서에 없으면 확인되지 않는다)을 지키려고 문서 기반 답변과 분리해 표시. verify 21/21. 모델이 규칙과 달리 끝에 추가 도움 제안을 붙이는 경우가 있음. 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
   - 검사 보정: 조건 탐색 판정을 분류 정확 일치 → 'Messaging' 포함으로 (cloud-stream 분류가 'Spring Cloud Messaging'). '항목 자체 문서 포함'은 캐시 때문에 두 번째 실행부터 selected가 비어 Chroma 색인 여부로 판정.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 

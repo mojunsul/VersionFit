@@ -74,11 +74,52 @@ function renderMessage(m) {
   box.innerHTML = markdown(m.content);
   if (m.notice) box.append(el("p", { className: "notice" }, m.notice));
   box.append(renderSources(m.content, m.sources || []));
+  if (m.general) box.append(renderGeneral(m.general));
+  else if (m.question && needsGeneral(m)) box.append(generalButton(m));
   return box;
 }
 function renderChat() {
   const list = $("messages");
   list.replaceChildren(...loadChat().map(renderMessage));
+}
+
+// ---------- 문서에 답이 없을 때 일반 지식 답변 (버튼을 눌렀을 때만) ----------
+function needsGeneral(m) {
+  return m.content.includes("확인되지 않") || !citedSources(m.content, m.sources || []).length;
+}
+function renderGeneral(text) {
+  const box = el("div", { className: "general" });
+  box.append(el("p", { className: "general-label" }, "⚠ 문서 근거 없음 · 일반 지식 답변 (버전과 맞지 않을 수 있습니다)"));
+  const body = el("div");
+  body.innerHTML = markdown(text);
+  box.append(body);
+  return box;
+}
+function generalButton(m) {
+  const btn = el("button", { type: "button", className: "secondary general-btn" }, "💡 일반 지식으로 답변 보기");
+  btn.addEventListener("click", async () => {
+    const key = chatKey();
+    btn.disabled = true;
+    btn.textContent = "일반 지식 답변을 만드는 중...";
+    try {
+      const { answer } = await getJson("/api/general", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: m.item_id, version: m.version, question: m.question }),
+      });
+      // 같은 대화에서 이 답변을 찾아 일반 지식 답변을 붙여 저장한다
+      const saved = (() => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } })();
+      const target = saved.find((s) => s.role === "assistant" && s.question === m.question && s.content === m.content);
+      if (target) target.general = answer;
+      try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* 저장 불가 */ }
+      m.general = answer;
+      btn.replaceWith(renderGeneral(answer));
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "💡 일반 지식으로 답변 보기";
+      btn.after(el("p", { className: "error" }, err.message));
+    }
+  });
+  return btn;
 }
 
 async function refreshIndexStatus() {
@@ -165,6 +206,7 @@ async function send(kind, question) {
     status.open = false;
     label.textContent = kind === "guide" ? "가이드 준비 완료" : "근거 준비 완료";
     const reply = { role: "assistant", content: result.answer, sources: result.sources, notice: result.notice };
+    if (kind === "ask") Object.assign(reply, { question, ...target }); // 일반 지식 답변 버튼이 같은 질문을 다시 보낸다
     // 응답이 오는 동안 사용자가 항목·버전을 바꿨을 수 있어 원래 대화에 저장한다
     const key = `chat:${target.item_id}|${target.version}`;
     const saved = (() => { try { return JSON.parse(localStorage.getItem(key)) || messages; } catch { return messages; } })();
