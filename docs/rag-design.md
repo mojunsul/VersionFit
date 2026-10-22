@@ -49,6 +49,17 @@
 
 **외부 문서 출처 (`data_prep/external_docs.py`)**: 항목 id가 `SOURCES`에 있으면 그 문서도 후보 검색에 넣는다. springdoc-openapi, Spring Data JDBC·R2DBC·JPA·Redis·MongoDB·Elasticsearch, Spring Security(security 전체, oauth2-client는 OAuth2 부분), Spring Kafka·AMQP·Batch·Session. Boot 버전마다 호환되는 판을 쓴다 (springdoc: 4.x → 3.x 문서, 3.4~3.5 → 2.x 문서. Spring Data: Boot 버전의 릴리스 묶음(spring-data-bom)이 정한 모듈 판 브랜치, commons는 묶음의 commons 판 브랜치. 예: Boot 4.0 → MongoDB 5.0 + commons 4.0). include 경로에 문서 속성이 쓰이면(`include::{vector-search-intro-include}[]`) 상위 문서의 정의를 대입한다. GitHub 파일 목록(Trees API, 비로그인 시간당 60회)은 `.tree.json`으로 저장해 다시 쓴다. 판마다 브랜치와 폴더를 지정하고, 사본은 `data/external_docs/{저장소}/{브랜치}/`에 둔다. Antora 문서의 `include::partial$…`, `include::{commons}@data-commons::page$…`(spring-data-commons 같은 판), 같은 폴더 상대 include를 풀고, `ifdef/ifndef/ifeval`과 본문 속성 정의(`:이름: 값`)를 처리한다. doc_id는 `출처:경로`(예: `springdoc-openapi:v2/features.adoc`), 청크 메타데이터 `source_type`은 표시 이름("springdoc-openapi 2.x 문서"), `source_url`은 판별 원문 링크.
 
+**출처 종류에 따른 처리 차이 (F2016)**
+
+| 단계 | Spring Boot 문서 | 프로젝트 문서 (springdoc, Spring Data, Security 등) | 다르게 한 이유 |
+|---|---|---|---|
+| 판 선택 | Boot 버전 = 브랜치 (4.1.x 등) | Boot 버전 → 그 Boot가 관리하는 프로젝트 판 브랜치 (예: Boot 4.0 → MongoDB 5.0, Security 7.0) | 프로젝트마다 번호 체계가 달라, Boot 의존성 설정과 Maven Central BOM으로 짝을 확인했다 |
+| 원문 정리 | 매크로 정리(`javadoc:`, `configprop:`, `xref:`) | 같은 정리 + include 풀기(partial, spring-data-commons 페이지, 속성으로 지정한 경로), 조건 블록·본문 속성 처리, 사본에 없는 예제 코드 include 삭제 | 프로젝트 문서는 여러 파일·저장소를 include로 묶어 한 페이지를 만든다. 풀지 않으면 본문이 비거나(commons 껍데기 페이지) 문법 기호가 남는다 |
+| 후보 수집 | 버전 사본에서 검색 | 같은 검색에 그 항목의 프로젝트 문서를 더함 | 항목과 관계없는 프로젝트 문서가 후보에 섞이지 않게 항목 id로 묶었다 |
+| 청킹 | 헤더 단위 | **같음** | 둘 다 AsciiDoc 헤더 구조라 같은 청커가 맞는다. 정리 단계에서 형식 차이를 흡수했다 |
+| 근거 표시 | "Spring Boot 4.0.x 문서" | "Spring Data JPA 4.0 문서"처럼 프로젝트 이름과 판 | 출처 종류와 판을 구분해 보여 준다 |
+| 검색 | 항목 자체 Boot 문서에서 근거 3개 먼저 (6.1-2) | 나머지 자리를 MMR로 | 버전별 차이(패키지 이동 등)는 Boot 문서에 있어, 프로젝트 문서가 많아도 빠지지 않게 했다 |
+
 ## 4. 검색과 병합 (F2006, F2014)
 
 1. 선택 항목의 `items` 청크를 검색 없이 항상 포함.
