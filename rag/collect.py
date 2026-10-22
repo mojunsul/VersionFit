@@ -119,7 +119,7 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
         raise RuntimeError(f"{version} 원문 사본이 없습니다. python -m scripts.fetch_docs 를 먼저 실행하세요.")
     docs |= external_docs.load(item["id"], version)  # 항목에 외부 문서 출처가 있으면 함께 후보로 검색
     on_step("후보 문서를 찾는 중")
-    candidates = search(docs, new_terms, CONFIG["collect"]["candidates"])
+    candidates = search(docs, new_terms, CONFIG["collect"]["candidates"], CONFIG["collect"]["term_cap"])
     selected = select_docs(item, version, question, candidates, docs, llm) if candidates else []
     if must in docs and must not in selected:
         selected.insert(0, must)  # 항목이 가리키는 문서는 선별과 무관하게 포함

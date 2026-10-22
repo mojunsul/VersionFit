@@ -123,6 +123,7 @@
   - 대표 질문: kafka 4.0.x 재시도·DLT(Kafka 4.0 문서 6개, DefaultErrorHandler + DeadLetterPublishingRecoverer), rabbitmq 3.5.x 재시도(AMQP 3.2 문서 5개), batch 4.0.x 청크 Step(Batch 6.0 문서 7개, StepBuilder.chunk), session 3.4.x Redis 세션(Session 3.4 문서 7개).
 - 근거 확보와 답변 규칙 (2026-10-22, rag-design.md 6.1-2): Spring Kafka 문서 추가 후 kafka 4.0.x RAG가 `KafkaProperties` 패키지를 놓침 → 항목 자체 Boot 문서에서 관련도 순 3개(`own_doc_k`)를 먼저 확보. MMR 2자리로는 정답 청크를 건너뛰어 3.5.x도 틀렸음. 답변 프롬프트에 "근거에 직접 예시가 없어도 근거의 기능으로 해결 방법이 분명하면 먼저 설명" 규칙 추가 ("join sql 작성법"이 `@Query`로 커스텀 쿼리를 쓰는 방향까지 답함, 첫 문장은 여전히 "구체적으로 문서화되지 않음"). compare_rag RAG 6/6, verify 21/21.
 - 외부 문서 추가 효과 (2026-10-22, rag-comparison.md 4절, `scripts/compare_sources.py`): 13개 항목 질문을 Boot 문서만 / 외부 문서 포함으로 비교. 8개 ✓로 개선, 2개 △(mongodb `newAggregation`, security `permitAll` 빠짐), 2개는 Boot 문서로도 됨(oauth2-client, rabbitmq), 1개 실패(session-data-redis: 수집이 `guides/boot-findbyusername.adoc`을 고르지 않음).
+- 수집 후보 점수 상한과 프롬프트2 (2026-10-22): session 질문 실패 원인은 후보 찾기에서 흔한 검색어가 점수를 독차지한 것 (프롬프트2만 고쳐서는 가이드가 후보에 없어 실패). `term_cap = 10` + 프롬프트2 수정 후 비교 항목 15개 수집 캐시를 지우고 재측정: compare_sources ✓ 10 / △ 1(security) / 원래 됨 2, compare_search 같음, compare_rag RAG 6/6, verify 21/21.
 - 출처 표기 (2026-10-22): README "출처와 라이선스" 절(저장소 9곳, Apache-2.0, 수정 고지)과 사이드바 하단 고지 추가.
 
 ## 4. 알려진 문제

@@ -204,15 +204,15 @@ Spring Boot 4.0.x 기준, 질문하신 `Kafka 브로커`에 권장되는 JVM 힙
 | batch 4.0.x | 청크 기반 Step | ✗ | ✓ `StepBuilder` + `chunk` |
 | springdoc-openapi 3.5.x | Swagger UI 경로 변경 | ✗ (근거 없음) | ✓ `springdoc.swagger-ui.path` |
 | data-jdbc 4.1.x | 메서드 이름 쿼리로 join 되나? | △ `@Query`만 언급, join 가능 여부는 "확인되지 않는다" | ✓ "쿼리 유도는 join 없이 WHERE까지 → `@Query`" |
-| data-mongodb 4.0.x | MongoTemplate 집계 쿼리 | ✗ | △ Aggregation 지원·`Aggregation.stage`까지, `newAggregation` 없음 |
+| data-mongodb 4.0.x | MongoTemplate 집계 쿼리 | ✗ | ✓ `newAggregation` + `aggregate` 예시 (처음 측정 △) |
 | security 4.0.x | 특정 경로만 인증 없이 허용 | ✗ | △ `requestMatchers`·`securityMatcher`까지, `permitAll` 없음 (다른 실행에서는 나옴) |
 | oauth2-client 3.5.x | 구글 로그인 설정 | ✓ | ✓ (더 자세함) |
 | rabbitmq 3.5.x | 재시도 소진 시 메시지 처리 | ✓ | ✓ |
-| session-data-redis 3.4.x | 사용자 이름으로 세션 찾기 | ✗ | ✗ |
+| session-data-redis 3.4.x | 사용자 이름으로 세션 찾기 | ✗ | ✓ `FindByIndexNameSessionRepository`, 주체 이름 인덱스 (처음 측정 ✗) |
 
 **해석**
-- 13개 중 8개가 외부 문서로 바로 답할 수 있게 됐고(✗/△ → ✓), 2개는 나아졌지만 핵심 값이 빠졌다(✗ → △). Boot 문서는 자동 구성과 설정 속성까지만 다루고, 클래스 사용법(`R2dbcEntityTemplate`, `@EntityGraph`, `DeadLetterPublishingRecoverer` 등)은 각 프로젝트 문서에 있기 때문이다.
+- 13개 중 10개가 외부 문서로 답할 수 있게 됐고(✗/△ → ✓), security 1개는 나아졌지만 `permitAll`이 빠졌다(✗ → △). 표는 수집 후보 점수 상한과 문서 고르기 프롬프트를 고친 뒤(아래) 다시 잰 값이다. Boot 문서는 자동 구성과 설정 속성까지만 다루고, 클래스 사용법(`R2dbcEntityTemplate`, `@EntityGraph`, `DeadLetterPublishingRecoverer` 등)은 각 프로젝트 문서에 있기 때문이다.
 - oauth2-client, rabbitmq는 Boot 문서에 이미 해당 설정이 설명돼 있어 차이가 작다.
-- session-data-redis는 원문에 이 질문을 다룬 가이드(`guides/boot-findbyusername.adoc`)가 있는데 수집 단계 프롬프트2가 고르지 않았고, 고른 `configuration/common.adoc`의 `FindByIndexNameSessionRepository` 청크는 검색 순위에서 밀렸다. 데이터가 아니라 문서 선택·검색 문제다.
+- 처음 측정에서 session-data-redis는 ✗였다. 원문에 이 질문을 다룬 가이드(`guides/boot-findbyusername.adoc`)가 있는데, 수집 후보 점수가 검색어 등장 횟수의 합이라 흔한 검색어("spring session")가 긴 문서에서 점수를 독차지해 가이드가 후보 10개 밖으로 밀렸다. 검색어 하나의 본문 횟수를 10까지만 세고(`term_cap`), 문서 고르기 프롬프트에 "프로젝트 문서도 고를 수 있다, 주제를 제목으로 직접 다룬 가이드를 먼저"를 넣은 뒤 ✓가 됐다. mongodb도 △ → ✓.
 
 **한계**: 질문마다 1회 측정이다. security처럼 같은 질문도 실행마다 답이 달라질 수 있다.

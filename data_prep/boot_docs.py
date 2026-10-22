@@ -107,12 +107,14 @@ def load_docs(version: str) -> dict[str, str]:
             for p in sorted(root.rglob("*.adoc"))}
 
 
-def search(docs: dict[str, str], terms: list[str], limit: int) -> list[str]:
-    """검색어가 경로·본문에 나오는 횟수로 후보 doc_id를 고른다. 경로 일치는 문서 주제라서 가중치를 크게 준다."""
+def search(docs: dict[str, str], terms: list[str], limit: int, cap: int) -> list[str]:
+    """검색어가 경로·본문에 나오는 횟수로 후보 doc_id를 고른다. 경로 일치는 문서 주제라서 가중치를 크게 준다.
+    본문 횟수는 검색어마다 cap까지만 센다. 흔한 검색어("spring session")가 긴 문서에서 점수를 독차지하면
+    드물지만 결정적인 검색어(FindByIndexNameSessionRepository)의 문서가 후보에서 빠진다."""
     scores = {}
     for doc_id, text in docs.items():
         body, path = text.lower(), doc_id.lower()
-        score = sum(body.count(t.lower()) + 20 * path.count(t.lower()) for t in terms if t.strip())
+        score = sum(min(body.count(t.lower()), cap) + 20 * path.count(t.lower()) for t in terms if t.strip())
         if score:
             scores[doc_id] = score
     return sorted(scores, key=scores.get, reverse=True)[:limit]

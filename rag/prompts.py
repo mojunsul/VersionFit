@@ -15,7 +15,7 @@ SEARCH_TERMS = """너는 Spring 기술 문서 전문가다. 질문에 답하려�
 - 3~6개를 고른다. spring, boot, configuration처럼 모든 문서에 나오는 말은 빼라.
 - JSON 문자열 배열만 출력한다. 다른 글은 쓰지 않는다."""
 
-SELECT_DOCS = """너는 Spring 기술 문서 전문가다. 질문에 답하는 데 필요한 Spring Boot {version} 공식 문서를 고른다.
+SELECT_DOCS = """너는 Spring 기술 문서 전문가다. 질문에 답하는 데 필요한 문서를 Spring Boot {version} 공식 문서와 이 항목의 프로젝트 문서(경로가 `항목id:`로 시작) 중에서 고른다.
 
 [항목] {name}
 [질문] {question}
@@ -25,6 +25,7 @@ SELECT_DOCS = """너는 Spring 기술 문서 전문가다. 질문에 답하는 �
 
 규칙:
 - 질문의 답이 들어 있을 문서만 최대 {max_docs}개 고른다. 관련 있는 문서가 없으면 빈 배열.
+- 질문 주제를 제목으로 직접 다루는 문서(가이드, how-to)가 있으면 먼저 고른다.
 - 고른 문서 번호의 JSON 정수 배열만 출력한다. 예: [2, 5]"""
 
 ANSWER = """너는 Spring Boot 기술 문서 전문가다. 아래 [근거]에 있는 내용만 사용해 한국어로 답한다.

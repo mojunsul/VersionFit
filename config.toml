@@ -18,6 +18,7 @@ lambda_mult = 0.6     # mmr 관련도 비중 (1 = similarity와 같음). 0.5는 
 [collect]
 candidates = 10      # 프롬프트2에 보여 줄 후보 문서 수
 max_docs = 3         # 질문 한 번에 프롬프트2가 고를 최대 문서 수
+term_cap = 10        # 후보 점수에서 검색어 하나가 본문에 나온 횟수를 셀 상한 (흔한 검색어가 점수를 독차지하지 않게)
 
 [explore]
 candidates = 30      # 조건 탐색에서 items 유사도 검색으로 모을 후보 수
