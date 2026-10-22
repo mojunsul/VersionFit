@@ -138,7 +138,17 @@ SOURCES = {
                             "label": f"Lombok {v} 문서"}
                      for boot, v in [("4.1.x", "1.18.48"), ("4.0.x", "1.18.48"), ("3.5.x", "1.18.46"), ("3.4.x", "1.18.42")]},
     },
+    "oauth2-resource-server": _security("Spring Security", ["pages/servlet/oauth2/resource-server/**",
+                                                            "pages/reactive/oauth2/resource-server/**"]),
+    "security-saml2": _security("Spring Security", ["pages/servlet/saml2/**"]),
+    "spring-security-webauthn": _security("Spring Security", ["pages/servlet/authentication/passkeys.adoc"]),
 }
+# 같은 프로젝트의 다른 스타터는 그 프로젝트 문서를 함께 쓴다 (사본도 같다)
+SOURCES |= {alias: SOURCES[base] for base, aliases in {
+    "data-redis": ["data-redis-reactive"], "data-mongodb": ["data-mongodb-reactive"],
+    "kafka": ["kafka-streams"], "rabbitmq": ["rabbitmq-streams"], "batch": ["batch-jdbc", "batch-data-mongodb"],
+    "session-data-redis": ["session-jdbc", "session-hazelcast", "session-data-mongodb"],
+}.items() for alias in aliases}
 
 INCLUDE = re.compile(r"(?m)^include::([^\[\n]+)\[[^\]\n]*\]\s*$")
 

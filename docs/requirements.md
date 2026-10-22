@@ -66,7 +66,7 @@
 | F2013 | UI | 프론트엔드 직접 구현 | FastAPI(`server.py`) + HTML·CSS·JS(`web/`), SSE 진행 상태 | 심화 (선택) |
 | F2014 | 검색 | MMR 검색 | 후보 넉넉히 조회 후 MMR로 선별, 유사도 검색과 비교 | 심화 (선택) |
 | F2015 | 품질 | RAG 전후 비교 | 대표 질문 5개 이상, 3개 기준(사실 정확성·근거 제시·모름 응답)으로 비교 문서 작성 → `docs/rag-comparison.md` | 심화 (선택) |
-| F2016 | 수집 | 여러 문서 출처 결합 | Spring Boot 문서에 더해 14개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·mongodb·elasticsearch, security, oauth2-client, kafka, rabbitmq, batch, session-data-redis, lombok)의 프로젝트 문서를 Boot 버전에 맞는 판으로 결합, 근거에 출처 종류 표시 | 심화 (선택) |
+| F2016 | 수집 | 여러 문서 출처 결합 | Spring Boot 문서에 더해 26개 항목(springdoc-openapi, data-jdbc·r2dbc·jpa·redis·redis-reactive·mongodb·mongodb-reactive·elasticsearch, security·oauth2-client·oauth2-resource-server·security-saml2·spring-security-webauthn, kafka·kafka-streams, rabbitmq·rabbitmq-streams, batch·batch-jdbc·batch-data-mongodb, session-data-redis·session-jdbc·session-hazelcast·session-data-mongodb, lombok)의 프로젝트 문서를 Boot 버전에 맞는 판으로 결합, 근거에 출처 종류 표시 | 심화 (선택) |
 | (추가) | 생성 | 일반 지식 답변 | 문서 기반 답변이 확인되지 않거나 인용이 없을 때 사용자가 버튼을 누르면 근거 없이 LLM 일반 지식으로 답하고, "문서 근거 없음"으로 구분 표시 (F2007은 그대로) | 추가 |
 
 ## 3. 비기능 요구사항
