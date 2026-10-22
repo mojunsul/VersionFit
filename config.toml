@@ -12,6 +12,7 @@ overlap = 200
 top_k = 8
 mode = "mmr"          # similarity | mmr. 비교 결과 rag-design.md 6.1
 fetch_k = 30          # mmr일 때 먼저 가져올 후보 수
+lambda_mult = 0.6     # mmr 관련도 비중 (1 = similarity와 같음). 0.5는 비슷한 섹션이 많은 문서에서 정답을 밀어냄
 
 [collect]
 candidates = 10      # 프롬프트2에 보여 줄 후보 문서 수

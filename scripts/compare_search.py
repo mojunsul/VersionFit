@@ -31,7 +31,8 @@ def measure(item: dict, version: str, question: str, words: list[str], mode: str
 def main():
     items = {i["id"]: i for i in load_items()}
     original = CONFIG["search"]["mode"]
-    print(f"top_k={CONFIG['search']['top_k']} (항목 정보 1 + 문서), fetch_k={CONFIG['search']['fetch_k']}\n")
+    print(f"top_k={CONFIG['search']['top_k']} (항목 정보 1 + 문서), fetch_k={CONFIG['search']['fetch_k']}, "
+          f"lambda_mult={CONFIG['search']['lambda_mult']}\n")
     print("| 항목·버전 | 방식 | 근거 수 | 고유 섹션 | 정답 근거 순위 |")
     print("|---|---|---|---|---|")
     try:

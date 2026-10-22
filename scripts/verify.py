@@ -6,6 +6,7 @@ config.toml과 chroma_db는 그대로 둔다. 키는 load_dotenv()로 불러온 
 """
 import json
 import os
+import re
 import subprocess
 import time
 from unittest import mock
@@ -110,7 +111,12 @@ def main():
     head("4.4 서비스 기능과 화면 (F2009~F2012)")
     found = explore("메시징 큐에 쓸 수 있는 의존성")
     print("  '메시징 큐' 탐색:", [(f["item_id"], f["group"]) for f in found])
-    check("조건 탐색 결과가 모두 메시징 분류다", bool(found) and all("Messaging" in f["group"] for f in found))
+    # 분류는 달라도 메시징 서비스인 항목이 있다 (예: Google Cloud 분류의 cloud-gcp-pubsub)
+    messaging = [f for f in found if "Messaging" in f["group"]]
+    related = all("Messaging" in f["group"] or re.search(r"messag|pub/?sub|broker|queue", f["description"], re.I)
+                  for f in found)
+    check("조건 탐색 결과 대부분이 메시징 분류이고, 메시징과 무관한 항목이 없다",
+          len(messaging) * 2 > len(found) and related, f"메시징 분류 {len(messaging)}/{len(found)}")
     nothing = explore("냉장고 온도를 조절하는 의존성")
     check("조건과 무관한 항목을 섞지 않는다 (무관한 조건 → 빈 결과)", not nothing, str([f["item_id"] for f in nothing]))
     g_result = guide(kafka, "4.0.x")

@@ -4,7 +4,7 @@
 
 - 자동 확인 재현: `python -m scripts.verify` (아래 ✅ 자동 표시 항목 20개, 2026-10-22 실행 20/20 통과)
 - 설정을 바꾸는 실험(청크 크기, Top-k)과 키 없음·색인 없음 상태는 스크립트 안에서만 흉내 내고 `config.toml`, `chroma_db`는 바꾸지 않는다.
-- 모델 `gpt-5.4-mini`, 검색 `mmr`, 청크 1000/200, Top-k 8
+- 모델 `gpt-5.4-mini`, 검색 `mmr`(lambda_mult 0.6, 질문별 수집 문서 범위), 청크 1000/200, Top-k 8
 
 ## 4.1 데이터와 색인 (F2001~F2002)
 
@@ -49,7 +49,7 @@ graph TD;
 | 확인 항목 | 결과 | 증거 |
 |---|---|---|
 | 항목을 바꿨을 때 이전 대화가 섞이지 않는다 | 미확인 | 캡처 ③ 필요. 대화는 localStorage `chat:{항목}\|{버전}`에 따로 저장 |
-| 조건 탐색 결과에 조건과 맞지 않는 항목이 섞이지 않는다 | 통과 ✅ | "메시징 큐에 쓸 수 있는 의존성" → rabbitmq, kafka, pulsar, activemq, artemis, solace, cloud-stream 등 모두 Messaging 분류. 무관한 조건("냉장고 온도를 조절하는 의존성") → 빈 결과. 캡처 ④ |
+| 조건 탐색 결과에 조건과 맞지 않는 항목이 섞이지 않는다 | 통과 ✅ | "메시징 큐에 쓸 수 있는 의존성" → rabbitmq, kafka, pulsar, activemq, artemis, solace, cloud-stream, integration (8/8 Messaging 분류). 실행에 따라 cloud-gcp-pubsub(분류 Google Cloud, 설명 Pub/Sub)도 나와, 판정은 "대부분 Messaging 분류 + 나머지도 설명이 메시징"으로 한다. 무관한 조건("냉장고 온도를 조절하는 의존성") → 빈 결과. 캡처 ④ |
 | 도메인 특화 기능 결과에도 근거가 제시된다 | 통과 ✅ | Kafka 4.0.x 가이드에 `[근거 N]`, 출처 Initializr 의존성 좌표 + 항목 정보 + Spring Boot 4.0.x 문서. 캡처 ⑤ |
 | 문서 수집과 답변 생성 중 진행 상태가 표시된다 | 통과 ✅ (화면 미확인) | `/api/ask` SSE step 전달 확인 (uvicorn 실측 0.5→1.8→2.9초에 하나씩). 화면 캡처 ⑥ 필요 |
 | 색인이 없는 상태와 API 키가 없는 상태에서 안내가 표시된다 | 통과 ✅ (화면 미확인) | `/api/status`가 키 없음 `gms_key: false`, 색인 없음 `items_total: 0`을 돌려주고 화면이 배너로 안내. 캡처 ⑦ 필요 |

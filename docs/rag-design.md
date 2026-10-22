@@ -52,7 +52,7 @@
 ## 4. 검색과 병합 (F2006, F2014)
 
 1. 선택 항목의 `items` 청크를 검색 없이 항상 포함.
-2. `docs`에서 `item_id`·`boot_version` 필터 후 MMR 검색 (후보 30개 → 7개, 6.1). 가이드는 Initializr 의존성 좌표를 검색 밖 근거로 추가한다.
+2. `docs`에서 `item_id`·`boot_version`·`doc_id`(이 질문을 위해 수집 단계가 고른 문서) 필터 후 MMR 검색 (후보 30개 → 7개, 6.1). 가이드는 Initializr 의존성 좌표를 검색 밖 근거로 추가한다.
 3. 두 결과를 병합하고 청크 ID 기준으로 중복 제거.
 4. 근거 번호를 부여하고 출처 유형을 구분해 프롬프트에 전달.
 
@@ -78,31 +78,40 @@
 |---|---|---|
 | 청크 크기 / 중복 | 1000자 / 200자 | 명세 예시. 검증 단계에서 바꿔 비교 |
 | Top-k | 8 (항목 메타 1 + 문서 청크) | 검증 단계에서 조정 |
-| 검색 방식 | ~~similarity~~ → **mmr** (fetch_k 30) | 6.1 비교에서 정답 근거를 빼지 않고 중복 섹션을 줄임 (2026-10-22 변경) |
+| 검색 방식 | ~~similarity~~ → **mmr** (fetch_k 30, lambda_mult ~~0.5~~ → 0.6) | 6.1 비교에서 정답 근거를 앞당기고 중복 섹션을 줄임 (2026-10-22 변경) |
 | 수집 후보 / 선별 수 | 10 / 3 | 프롬프트2에 보여 줄 후보와 질문 한 번에 새로 색인할 최대 문서 수 |
 | 탐색 후보 / 결과 수 | 30 / 8 | 조건 탐색의 items 후보와 카드 수 |
 | 답변 모델 | ~~gpt-5.4-nano~~ → **gpt-5.4-mini** | 6.2 비교. 임베딩은 `text-embedding-3-small` (1536차원) |
 
 ### 6.1 검색 방식 비교: similarity vs MMR (F2014, 2026-10-22)
 
-`python -m scripts.compare_search`. 같은 질문으로 근거 검색(`retrieve`)만 비교했다. 문서 근거 7개(top_k 8 - 항목 정보 1), MMR은 후보 30개(fetch_k)에서 `lambda_mult` 0.5(LangChain 기본값)로 고른다. "정답 근거 순위"는 답을 판별하는 단어가 처음 나오는 근거 번호.
+`python -m scripts.compare_search`. 같은 질문으로 근거 검색(`retrieve`)만 비교했다. 문서 근거 7개(top_k 8 - 항목 정보 1), MMR은 후보 30개(fetch_k)에서 `lambda_mult` 0.6으로 고른다. 검색 범위는 질문별 수집 문서(`doc_id`)다. "정답 근거 순위"는 답을 판별하는 단어가 처음 나오는 근거 번호.
 
-| 항목·버전 (색인 청크 수) | 방식 | 고유 섹션 / 7 | 정답 근거 순위 |
+| 항목·버전 | 방식 | 고유 섹션 / 7 | 정답 근거 순위 |
 |---|---|---|---|
-| kafka 4.0.x (11) | similarity | 5 | `JacksonJsonDeserializer` 3, `kafka.autoconfigure.KafkaProperties` 2 |
+| kafka 4.0.x | similarity | 5 | `JacksonJsonDeserializer` 3, `kafka.autoconfigure.KafkaProperties` 2 |
 | | mmr | 5 | 3, 2 |
-| pulsar 3.5.x (24) | similarity | 7 | `spring-boot-starter-pulsar-reactive` 2 |
+| pulsar 3.5.x | similarity | 7 | `spring-boot-starter-pulsar-reactive` 2 |
 | | mmr | 7 | 2 |
-| web 4.0.x (116) | similarity | 5 | `tools.jackson` 2 |
+| web 4.0.x | similarity | 5 | `tools.jackson` 2 |
 | | mmr | **7** | 2 |
-| springdoc-openapi 4.1.x (138) | similarity | 7 | `springdoc.swagger-ui.path` **7** |
-| | mmr | 7 | **3** |
-| springdoc-openapi 3.5.x (112) | similarity | 5 | `springdoc.swagger-ui.path` 3 |
+| springdoc-openapi 4.1.x | similarity | 7 | `springdoc.swagger-ui.path` **7** |
+| | mmr | 7 | **4** |
+| springdoc-openapi 3.5.x | similarity | 5 | `springdoc.swagger-ui.path` 3 |
 | | mmr | 5 | 3 |
 
-- MMR이 정답 근거를 뺀 경우는 없었다. 순위가 같거나 앞당겨졌다 (springdoc 4.1.x 7위 → 3위).
-- 색인 청크가 많은 경우(web 116)에 같은 섹션 반복이 줄었다 (고유 섹션 5 → 7). kafka(11), pulsar(24)처럼 청크가 적으면 후보 자체가 적어 차이가 없다.
-- 질문당 (항목, 버전)으로 걸러 검색하므로 후보 풀이 작아 효과가 크지 않다. 수집 문서가 늘수록 차이가 커질 것으로 보지만 확인하지 않았다.
+- MMR이 정답 근거를 뺀 경우는 없었다. 순위가 같거나 앞당겨졌다 (springdoc 4.1.x 7위 → 4위). web 4.0.x는 같은 섹션 반복이 줄었다 (고유 섹션 5 → 7).
+- `lambda_mult` 0.5(LangChain 기본값)에서는 springdoc 4.1.x 정답 근거가 7개 안에서 빠졌다. 검색 범위가 FAQ 한 문서(104청크)이고 비슷한 Swagger 섹션이 많아, 다양성 쪽이 정답을 밀어냈다. 0.5~0.8 비교 (정답 순위 / 고유 섹션):
+
+| lambda_mult | kafka 4.0.x | pulsar 3.5.x | web 4.0.x | springdoc 4.1.x | springdoc 3.5.x |
+|---|---|---|---|---|---|
+| 0.5 | 3, 2 | 2 | 2 / 7 | **없음** | 3 |
+| **0.6** | 3, 2 | 2 | 2 / 7 | **4** | 3 |
+| 0.7 | 3, 2 | 2 | 2 / 6 | 6 | 3 |
+| 0.8 | 3, 2 | 2 | 2 / 5 | 6 | 3 |
+
+  0.6이 정답을 빼지 않으면서 다양성을 유지해 0.6으로 정했다. 질문 5개로 정한 값이라 다른 질문에서도 최적인지는 확인하지 않았다.
+- 다른 질문으로 수집한 문서가 범위에 섞이면 결과가 달라진다 (9절 마지막 항목). 표는 질문별 범위로 좁힌 뒤 다시 잰 값이다.
 
 ### 6.2 답변 모델 비교 (2026-10-21)
 
@@ -144,3 +153,4 @@ nano는 검색된 근거에 `KafkaProperties` 전체 이름이 있어도 뒤 물
 - 조건 탐색 프롬프트 예시에 테스트 조건("메시징 큐 → Kafka, RabbitMQ")을 넣어 결과를 믿을 수 없었다. 무관한 예시로 바꿔 재확인했다. 무관한 조건에도 항목을 억지로 골라 "목적과 무관하면 고르지 않는다" 규칙을 넣었다.
 - RAG 전후 비교의 단어 판정에서 "단정할 수 없습니다"의 "없습니다"가 모름 응답으로 잡혀, 틀린 답이 맞게 판정됐다. 판정 단어를 좁히고 답변 전문을 직접 읽어 확정했다.
 - items 204건 중 Spring Boot 문서로 설명되는 항목은 73건뿐이다. SpringDoc처럼 외부 문서 항목은 근거가 Initializr 정보뿐이라, 외부 문서를 두 번째 출처로 추가했다. 외부 문서도 버전이 있어(springdoc 2.x/3.x) Boot 버전에 맞는 판을 고른다.
+- 검색을 (항목, 버전)으로만 거르니, 다른 질문으로 수집한 문서가 정답을 밀어냈다. Kafka 4.0.x에 검증 스크립트의 오류 시험 질문이 실제로 수집한 Testing 문서(105청크)가 쌓여, "JSON 역직렬화" 질문 근거가 `@JsonTest` 섹션으로 채워지고 답이 "확인되지 않는다"가 됐다 (화면 캡처에서 발견). 수집 단계가 이 질문용 `doc_ids`를 돌려주고 검색은 그 문서 안에서만 하도록 바꿨다. 정답 근거가 순위 밖 → 1위. 검증 스크립트의 오류 시험은 수집도 가짜로 바꿨다.

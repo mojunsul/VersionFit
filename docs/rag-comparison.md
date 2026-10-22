@@ -1,6 +1,6 @@
 # RAG 전후 비교 (F2015)
 
-2026-10-22 측정. 재현: `python -m scripts.compare_rag`
+2026-10-22 측정, 같은 날 질문별 문서 범위 검색·MMR lambda_mult 0.6으로 바꾼 뒤 재측정 (판정 같음, 답변 전문은 재측정 결과). 재현: `python -m scripts.compare_rag`
 
 ## 1. 방법
 
@@ -53,17 +53,18 @@
 
 Spring Boot 4.0.x 기준으로 답하면, **JSON 값 역직렬화 설정**에는 보통 `org.springframework.kafka.support.serializer.JsonDeserializer` 클래스를 사용합니다.
 
-또한 `KafkaProperties`의 패키지는 **`org.springframework.boot.autoconfigure.kafka.KafkaProperties`** 입니다.
+또한 **`KafkaProperties`의 패키지**는  
+`org.springframework.boot.autoconfigure.kafka.KafkaProperties` 입니다.
 
-참고로, JSON 직렬화/역직렬화 관련 설정은 보통 Spring Kafka의 serializer/deserializer를 함께 사용하며, 구체적인 설정 방식은 `spring.kafka.consumer.properties...` 또는 `DefaultKafkaConsumerFactory` 구성에서 다룹니다.
+원하시면 이어서 `application.yml`에서의 설정 예시도 같이 드리겠습니다.
 
 **RAG**
 
-Spring Boot 4.0.x 기준으로 답하면, 질문은 두 가지입니다.
+Spring Boot 4.0.x 기준
 
-1. JSON 값 역직렬화 설정에 쓰는 클래스는 `org.springframework.kafka.support.serializer.JacksonJsonDeserializer`입니다. [근거 4]
+1. JSON 값 역역직렬화 설정에 쓰는 클래스는 `org.springframework.kafka.support.serializer.JacksonJsonDeserializer`입니다. [근거 4]
 
-2. `KafkaProperties`의 패키지는 `org.springframework.boot.kafka.autoconfigure`입니다. 따라서 전체 이름은 `org.springframework.boot.kafka.autoconfigure.KafkaProperties`입니다. [근거 3]
+2. `KafkaProperties`의 패키지는 `org.springframework.boot.kafka.autoconfigure`입니다. [근거 3]
 
 ### 2. Spring for Apache Kafka · 3.5.x
 
@@ -71,19 +72,19 @@ Spring Boot 4.0.x 기준으로 답하면, 질문은 두 가지입니다.
 
 **LLM만**
 
-Spring Boot 3.5.x 기준, **JSON 값 역직렬화 설정**에는 보통 **`org.springframework.kafka.support.serializer.JsonDeserializer`** 클래스를 사용합니다.
+Spring Boot 3.5.x 기준으로 답하면, **JSON 값 역직렬화 설정**에는 보통 **`org.springframework.kafka.support.serializer.JsonDeserializer`** 클래스를 사용합니다.
 
-그리고 **`KafkaProperties`**의 패키지는 **`org.springframework.boot.autoconfigure.kafka.KafkaProperties`** 입니다.
+그리고 **`KafkaProperties`의 패키지**는 **`org.springframework.boot.autoconfigure.kafka.KafkaProperties`** 입니다.
 
-원하시면 이어서 `spring.kafka.consumer.properties.spring.json.trusted.packages` 같은 실제 설정 예시도 같이 정리해드릴게요.
+원하시면 이어서 `application.yml`에서 `spring.kafka.consumer.value-deserializer`를 어떻게 설정하는지도 예시로 보여드릴게요.
 
 **RAG**
 
 Spring Boot 3.5.x 기준입니다.
 
-1. JSON 값 역직렬화 설정에 쓰는 클래스는 `org.springframework.kafka.support.serializer.JsonDeserializer`입니다. [근거 4]
+1. JSON 값 역역렬화 설정에 쓰는 클래스는 `org.springframework.kafka.support.serializer.JsonDeserializer`입니다. [근거 4]
 
-2. `KafkaProperties`의 패키지는 `org.springframework.boot.autoconfigure.kafka`입니다. 즉, 전체 이름은 `org.springframework.boot.autoconfigure.kafka.KafkaProperties`입니다. [근거 3, 5]
+2. `KafkaProperties`의 패키지는 `org.springframework.boot.autoconfigure.kafka`입니다. 즉 전체 이름은 `org.springframework.boot.autoconfigure.kafka.KafkaProperties`입니다. [근거 3, 5]
 
 ### 3. Spring Web · 4.0.x
 
@@ -91,22 +92,29 @@ Spring Boot 3.5.x 기준입니다.
 
 **LLM만**
 
-Spring Boot 4.0.x 기준으로, JSON 직렬화(Jackson) 설정과 관련해 주로 사용하는 패키지는 **`org.springframework.http.converter.json`** 입니다.
+Spring Boot 4.0.x 기준, JSON 직렬화(Jackson)를 설정할 때 주로 사용하는 패키지는 **`com.fasterxml.jackson`** 계열입니다.
 
-대표적으로 다음 클래스들이 있습니다.
+예를 들면:
+- `com.fasterxml.jackson.databind`
+- `com.fasterxml.jackson.databind.module`
+- `com.fasterxml.jackson.annotation`
 
-- `org.springframework.http.converter.json.Jackson2ObjectMapperBuilder`
-- `org.springframework.http.converter.json.Jackson2ObjectMapperBuilderCustomizer`
+Spring Boot에서 Jackson 설정 자체를 다룰 때는 보통 **Spring 설정 패키지인 `org.springframework.boot.autoconfigure.jackson`** 도 함께 보게 됩니다.
 
-참고로, 애플리케이션에서 Jackson 자체 설정을 직접 다룰 때는 보통 Jackson 라이브러리의 패키지인 **`com.fasterxml.jackson.databind`** 계열도 함께 사용합니다.
+정리하면:
+- **Jackson 라이브러리 패키지:** `com.fasterxml.jackson.*`
+- **Spring Boot의 Jackson 자동설정 관련 패키지:** `org.springframework.boot.autoconfigure.jackson`
 
-다만, **Spring Boot 4.0.x에서 새로 바뀐 내부 구조나 추가된 패키지**까지는 이 질문만으로 확실히 단정하기 어렵습니다. 필요한 경우 사용 목적(전역 설정, ObjectMapper 커스터마이징, Web MVC 메시지 컨버터 설정 등)을 알려주시면 더 정확히 답하겠습니다.
+정확히 “어떤 설정을 하려는지”에 따라 사용하는 패키지가 조금 달라질 수 있습니다.
 
 **RAG**
 
-Spring Boot 4.0.x 기준, JSON 직렬화(Jackson) 설정과 관련해 근거에서 확인되는 패키지는 `org.springframework.boot.jackson`입니다. `@org.springframework.boot.jackson.JacksonComponent`를 사용해 Spring Bean을 직접 등록할 수 있다고 문서에 나와 있습니다. [근거 4]
+Spring Boot 4.0.x 기준, JSON 직렬화(Jackson)를 설정할 때 관련 패키지는 문서에서 확인되는 범위 내에서 다음과 같습니다.
 
-또한 Jackson 3의 자동 구성과 관련된 클래스는 `tools.jackson.databind.json.JsonMapper`이며, 이 Bean이 자동으로 구성된다고 되어 있습니다. 다만 이 근거에는 `JsonMapper`의 패키지가 `tools.jackson.databind.json`로 직접 제시되어 있을 뿐, “설정할 때 쓰는 패키지”를 하나로 특정하는 설명은 문서에서 확인되지 않는다. [근거 3]
+- Jackson 3 관련 클래스는 `org.springframework.boot.jackson` 패키지를 사용합니다. 예를 들어 `org.springframework.boot.jackson.JacksonMixin`, `org.springframework.boot.jackson.JacksonMixinModule`, `org.springframework.boot.jackson.ObjectValueSerializer`, `org.springframework.boot.jackson.ObjectValueDeserializer`가 있습니다. [근거 4, 6]
+- Jackson 3의 자동 구성 대상인 `tools.jackson.databind.json.JsonMapper`도 문서에 나타납니다. [근거 3]
+
+다만, 질문의 “JSON 직렬화(Jackson)를 설정할 때 쓰는 패키지”가 정확히 어떤 패키지를 뜻하는지 문서에서는 하나로 명시하지 않습니다. 따라서 문서에서 확인되는 관련 패키지는 `org.springframework.boot.jackson`와 `tools.jackson.databind.json`이며, 그 외는 문서에서 확인되지 않는다. [근거 3, 4, 6]
 
 ### 4. SpringDoc OpenAPI · 3.5.x
 
@@ -114,25 +122,20 @@ Spring Boot 4.0.x 기준, JSON 직렬화(Jackson) 설정과 관련해 근거에�
 
 **LLM만**
 
-Spring Boot 3.5.x 기준으로, Swagger UI 경로를 바꾸려면 `springdoc.swagger-ui.path` 속성을 사용합니다.
+Spring Boot 3.5.x 기준, Swagger UI 경로는 `springdoc.swagger-ui.path` 속성으로 변경합니다.
 
 예:
 ```properties
-springdoc.swagger-ui.path=/docs
+springdoc.swagger-ui.path=/api-docs
 ```
 
-그러면 Swagger UI는 기본 `/swagger-ui.html` 또는 `/swagger-ui/index.html` 대신 `/docs` 경로로 접근하게 됩니다.
+그러면 Swagger UI는 기본 `/swagger-ui.html` 또는 `/swagger-ui/index.html` 대신 지정한 경로로 접근하게 됩니다.
 
-참고로 OpenAPI JSON 경로도 함께 바꾸고 싶다면 보통 아래 속성을 씁니다:
-```properties
-springdoc.api-docs.path=/api-docs
-```
-
-원하시면 `application.yml` 예시도 같이 드리겠습니다.
+참고로 OpenAPI 문서 경로는 별도로 `springdoc.api-docs.path`로 바꿀 수 있습니다.
 
 **RAG**
 
-Spring Boot 3.5.x 기준, `Swagger UI` 경로를 바꾸려면 `springdoc.swagger-ui.path` 속성을 사용한다. 기본값은 `/swagger-ui.html`이며, Swagger UI HTML 문서의 커스텀 경로를 지정하는 용도다. [근거 4]
+Spring Boot 3.5.x 기준, `swagger-ui` 경로를 바꾸려면 `springdoc.swagger-ui.path` 속성을 사용합니다. 기본값은 `/swagger-ui.html`이며, `swagger-ui` HTML 문서의 커스텀 경로를 지정하는 속성입니다. [근거 4]
 
 ### 5. Spring for Apache Pulsar · 4.0.x
 
@@ -140,22 +143,27 @@ Spring Boot 3.5.x 기준, `Swagger UI` 경로를 바꾸려면 `springdoc.swagger
 
 **LLM만**
 
-Spring Boot 4.0.x 기준, **네, `spring-boot-starter-pulsar-reactive`를 사용할 수 있습니다.**
+Spring Boot 4.0.x 기준으로 답하면, **네. `spring-boot-starter-pulsar-reactive`를 사용할 수 있습니다.**
 
-다만 몇 가지를 같이 알아두면 좋습니다.
+다만 몇 가지를 함께 알아두면 좋습니다.
 
-- 이 스타터는 **리액티브 API를 쓰는 Pulsar 연동용**입니다.
-- 일반 `spring-boot-starter-pulsar`가 아닌, **리액티브 방식**으로 `ReactivePulsarTemplate` 같은 구성을 사용하게 됩니다.
-- 실제 사용 가능 여부는 **Pulsar 클라이언트/브로커 버전 호환성**과 함께 확인하는 것이 좋습니다.
+- 이 스타터는 **Reactive Streams 기반으로 Pulsar를 사용**할 때 필요한 의존성을 포함합니다.
+- 일반적인 `spring-boot-starter-pulsar`는 **동기식/기본 사용** 쪽에 가깝고,
+- `spring-boot-starter-pulsar-reactive`는 **리액티브 애플리케이션에서 Pulsar를 통합**할 때 사용합니다.
 
-즉, **Spring Boot 4.0.x에서는 리액티브 Pulsar 스타터를 사용할 수 있다**고 보면 됩니다.  
-원하시면 제가 이어서 **의존성 추가 예시**와 **간단한 리액티브 송수신 코드**도 한국어로 정리해드릴게요.
+즉, Spring Boot 4.0.x에서 **리액티브 Pulsar 클라이언트 지원을 원하면 이 스타터를 쓰는 방향이 맞습니다.**
+
+원하시면 제가 이어서
+1. Gradle/Maven 의존성 예시  
+2. `ReactivePulsarTemplate` / reactive consumer 사용 예시  
+3. 일반 Pulsar 스타터와의 차이  
+까지 정리해드릴게요.
 
 **RAG**
 
-Spring Boot 4.0.x 기준, `spring-boot-starter-pulsar-reactive`를 사용할 수 있는지는 문서에서 확인되지 않는다.
+Spring Boot 4.0.x 기준으로, `spring-boot-starter-pulsar-reactive`를 사용할 수 있는지는 **문서에서 확인되지 않는다**.
 
-문서에서 확인되는 것은 `spring-boot-starter-pulsar` 스타터가 있다는 점과, `org.springframework.pulsar:spring-pulsar`가 클래스패스에 있으면 Spring Boot가 Spring for Apache Pulsar 컴포넌트를 자동 구성한다는 점이다. [근거 2]
+근거에서 확인되는 것은 `spring-boot-starter-pulsar` 스타터와 `org.springframework.pulsar:spring-pulsar`에 대한 자동 구성뿐이며, 리액티브 Pulsar 스타터에 대한 언급은 없다 [근거 2].
 
 ### 6. Spring for Apache Kafka · 4.0.x
 
@@ -163,18 +171,21 @@ Spring Boot 4.0.x 기준, `spring-boot-starter-pulsar-reactive`를 사용할 수
 
 **LLM만**
 
-Spring Boot 4.0.x 기준, Kafka 브로커에 **권장되는 JVM 힙 메모리 크기**는 **일반적으로 6GB 정도(예: -Xmx6g)**로 안내됩니다.
+Spring Boot 4.0.x 기준, Kafka 브로커의 **권장 JVM 힙 메모리 크기**는 **일반적으로 6GB(예: `-Xmx6g`) 정도**로 많이 안내됩니다.
 
-다만 이 값은 **절대 고정값이 아니라 운영 환경과 메시지 처리량, 파티션 수, OS 캐시 활용, 네트워크/디스크 성능** 등에 따라 달라질 수 있습니다.  
-즉, **작은 클러스터는 더 적게도 가능하고**, 고부하 환경에서는 더 크게 잡을 수도 있습니다.
+다만 이 값은 **Spring Boot 자체의 설정값이라기보다 Kafka 브로커 운영 가이드에서 흔히 권장되는 경험적 기준**입니다. 실제 권장 크기는 다음에 따라 달라질 수 있습니다.
 
-정리하면:
-- **권장 시작점:** `-Xmx6g`
-- **주의:** Kafka는 힙만큼이나 **페이지 캐시(오프힙)** 도 중요하므로, 힙을 너무 크게 잡는 것은 오히려 비효율적일 수 있음
+- 브로커에 저장되는 파티션 수
+- 메시지 처리량
+- 페이지 캐시 사용량
+- 복제(replication) 및 압축 사용 여부
+- 디스크/네트워크 성능
+- JVM 버전과 GC 설정
 
-원하시면 제가 이어서 **Kafka 브로커 메모리 설정 전체 권장안(힙/오프힙/OS 캐시 포함)** 도 정리해드릴게요.
+즉, **“정답은 무조건 6GB”는 아니며**, 부하가 큰 환경에서는 더 크게 잡거나, 반대로 작은 환경에서는 더 작게도 운영할 수 있습니다.
+
+원하시면 제가 **Kafka 브로커 메모리 구성(힙 vs off-heap vs OS page cache)** 도 함께 정리해드릴게요.
 
 **RAG**
 
-Spring Boot 4.0.x 기준, Kafka 브로커에 권장되는 JVM 힙 메모리 크기는 문서에서 확인되지 않는다.
-
+Spring Boot 4.0.x 기준, 질문하신 `Kafka 브로커`에 권장되는 JVM 힙 메모리 크기는 문서에서 확인되지 않는다.

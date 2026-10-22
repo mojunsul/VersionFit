@@ -18,7 +18,7 @@
 | F2010 | 특화 기능: 버전 맞춤 사용 가이드 | 완료 | `services/guide.py`, `data_prep/initializr.py` `fetch_coordinates`, 사이드바 버튼. 4.x는 Initializr 좌표 근거 추가, 3.x는 문서만 |
 | F2011 | 조건 기반 항목 탐색 | 완료 | `services/explore.py`, `POST /api/explore`, `web/` 카드 → 해당 항목 대화 이동 |
 | F2012 | 진행 상태·안내 | 완료 | `collect(on_step=)` → `server.py` SSE `step` → 화면 진행 박스. 키 누락·items 0건·원문 없음·문서 근거 없음(`no_docs_notice`)·오류 안내 |
-| F2014 | 심화: MMR | 완료 | 기본 검색 방식 mmr (`config.toml`), 비교 `scripts/compare_search.py` → rag-design.md 6.1 |
+| F2014 | 심화: MMR | 완료 | 기본 검색 방식 mmr, lambda_mult 0.6 (`config.toml`), 비교 `scripts/compare_search.py` → rag-design.md 6.1 |
 | F2015 | 심화: RAG 전후 비교 | 완료 | `docs/rag-comparison.md`, `scripts/compare_rag.py` (mini, 6문항) |
 | F2016 | 심화: 여러 문서 출처 결합 | 일부 | springdoc-openapi 문서 추가 (`data_prep/external_docs.py`). 다른 외부 문서는 미착수 |
 | F2013 | 심화: HTML 프론트 | 완료 | `server.py` + `web/` (Streamlit `app.py` 삭제) |
@@ -94,9 +94,11 @@
   - 4.1.x 가이드에 Initializr 좌표(3.1.0)와 문서 예시(3.1.1)가 함께 나옴. nano라 형식이 어수선함.
 - 웹 서버 (FastAPI TestClient + uvicorn, 2026-10-21): status·items(204)·docs-count 정상, 잘못된 항목 404·버전 400·빈 질문 422. `/api/ask` 이벤트 step×4 → result, kafka 4.0.x `JacksonJsonDeserializer`. springdoc 4.1.x 가이드 출처에 3.x 문서 포함, htmx 가이드는 외부 문서 안내. uvicorn 실측: step이 0.5→1.8→2.9초에 하나씩 도착, result 6.0초 (버퍼링 없음). 브라우저 클릭 동작은 사용자 확인 필요.
 - similarity vs MMR (2026-10-22, 5개 질문, 표는 rag-design.md 6.1): MMR이 정답 근거를 뺀 경우 0. springdoc 4.1.x 정답 순위 7→3, web 4.0.x 고유 섹션 5→7, 나머지 동일. 색인 청크가 적은 (항목, 버전)(kafka 11, pulsar 24)은 차이 없음.
+- 근거 오염 (2026-10-22, 캡처 ⑤에서 발견): kafka 4.0.x 가이드가 "확인되지 않는다". 원인은 verify의 오류 시험 질문이 실제 수집을 해서 Testing 문서 105청크와 GraphQL 문서가 같은 (항목, 버전)에 쌓였고, 검색이 `@JsonTest` 섹션을 가져와 MMR이 정답 청크를 뺌. 수정: `collect`가 `doc_ids` 반환, `retrieve`는 `doc_id $in`으로 범위 제한, verify 오류 시험은 collect도 mock, 캐시 경로에서 질문별 검색어 저장 누락 수정. 결과: 정답 청크 1위, 답 `JacksonJsonDeserializer`, 가이드에 spring.kafka.* 설정. 오염 청크는 색인에 남아 있지만 다른 질문 범위에는 안 들어감.
+  - 범위 제한 후 재측정: lambda_mult 0.5에서 springdoc 4.1.x 정답이 빠짐 (FAQ 한 문서 104청크, 비슷한 섹션 다수) → 0.5~0.8 비교 후 0.6 (정답 4위, similarity 7위). verify 20/20. 조건 탐색 검사는 cloud-gcp-pubsub(Google Cloud 분류) 때문에 한 번 실패 → "대부분 Messaging + 나머지도 설명이 메시징"으로 판정 변경.
 - RAG 전후 비교 (2026-10-22, gpt-5.4-mini, 6문항, docs/rag-comparison.md): 사실 정확성 LLM만 2/5 → RAG 5/5, 근거 제시 0/5 → 5/5, 모름 응답 0/2 → 2/2. LLM만은 4.0 질문에 3.x 값으로 답하고(Kafka, Jackson), 사라진 리액티브 스타터를 "사용할 수 있다", 문서에 없는 브로커 힙을 "6GB"로 지어냄.
   - 단어 판정 보정: "없습니다"가 "단정할 수 없습니다"에 걸려 오판 → 모름 단어에서 제외, 틀린 주장 단어 추가. "Kafka 항목에서 GraphQL 질문"은 RAG가 Boot GraphQL 문서로 정확히 답해 모름 문항에서 제외.
-- 명세 4장 검증 (2026-10-22, docs/verification.md): `python -m scripts.verify` 자동 확인 20/20 통과. 화면 증명 7개(캡처 ①~⑦)는 미확인. 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
+- 명세 4장 검증 (2026-10-22, docs/verification.md): `python -m scripts.verify` 자동 확인 20/20 통과. 화면 증명 7개(캡처 ①~⑦)는 사용자가 찍음 (③ 재촬영 필요: 버전 바꾼 뒤 빈 대화, ⑤ 수정 후 재촬영). 명세 PDF는 한글 텍스트 추출이 안 돼 PyMuPDF(스크래치에 임시 설치)로 18~19쪽을 이미지로 읽음.
   - 검사 보정: 조건 탐색 판정을 분류 정확 일치 → 'Messaging' 포함으로 (cloud-stream 분류가 'Spring Cloud Messaging'). '항목 자체 문서 포함'은 캐시 때문에 두 번째 실행부터 selected가 비어 Chroma 색인 여부로 판정.
 - 3.5 vs 4.0 문서 차이 예 (대표 질문 근거): kafka(`JsonDeserializer`→`JacksonJsonDeserializer`, `KafkaProperties` 패키지 이동), pulsar(리액티브 스타터 섹션 삭제), features/json(`com.fasterxml`→`tools.jackson`).
 

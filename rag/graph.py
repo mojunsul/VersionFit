@@ -46,7 +46,8 @@ def retrieve(state: State) -> State:
     if doc_ids == []:  # 이 질문에 고른 문서가 없다
         found = []
     elif search["mode"] == "mmr":
-        found = docs.max_marginal_relevance_search(state["question"], k=k, fetch_k=search["fetch_k"], filter=where)
+        found = docs.max_marginal_relevance_search(state["question"], k=k, fetch_k=search["fetch_k"],
+                                                 lambda_mult=search["lambda_mult"], filter=where)
     else:
         found = docs.similarity_search(state["question"], k=k, filter=where)
 
