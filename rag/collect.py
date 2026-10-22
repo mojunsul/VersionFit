@@ -79,7 +79,11 @@ def _is_indexed(col, item_id: str, version: str, doc_id: str) -> bool:
 
 
 def collect(item: dict, version: str, question: str, on_step=lambda message: None) -> dict:
-    """질문에 필요한 문서를 docs 컬렉션에 채운다. on_step은 화면 진행 표시용 콜백이다. (F2012)"""
+    """질문에 필요한 문서를 docs 컬렉션에 채운다. on_step은 화면 진행 표시용 콜백이다. (F2012)
+
+    결과의 doc_ids는 이 질문을 위해 고른 문서(캐시된 검색어 포함)와 항목 자체 문서다. 답변 검색은 이 범위로
+    좁힌다. 같은 (항목, 버전)이라도 다른 질문 때문에 색인된 무관한 문서가 섞이지 않게 하기 위해서다.
+    """
     llm = chat_model()
     log = _load_log()
     # 프롬프트1은 같은 질문에도 다른 검색어를 내므로 질문별 검색어도 기록한다 (같은 질문 재수집 방지)
@@ -92,9 +96,11 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     key = lambda term: f"{item['id']}|{version}|{term}"
     new_terms = [t for t in terms if key(t) not in log]
     result = {"terms": terms, "new_terms": new_terms, "candidates": [], "selected": [], "added_chunks": 0}
+    must = doc_id_for_item(item["doc_url"])
     if not new_terms:
         on_step("이미 수집한 검색어라 수집을 건너뜀")
-        return result
+        _save_log(log)  # 질문별 검색어는 새로 기록됐을 수 있다
+        return {**result, "doc_ids": _question_docs(log, key, terms, must)}
 
     docs = load_docs(version)
     if not docs:
@@ -103,7 +109,6 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     on_step("후보 문서를 찾는 중")
     candidates = search(docs, new_terms, CONFIG["collect"]["candidates"])
     selected = select_docs(item, version, question, candidates, docs, llm) if candidates else []
-    must = doc_id_for_item(item["doc_url"])
     if must in docs and must not in selected:
         selected.insert(0, must)  # 항목이 가리키는 문서는 선별과 무관하게 포함
     result.update(candidates=candidates, selected=selected)
@@ -129,4 +134,8 @@ def collect(item: dict, version: str, question: str, on_step=lambda message: Non
     for term in new_terms:
         log[key(term)] = selected
     _save_log(log)
-    return result
+    return {**result, "doc_ids": _question_docs(log, key, terms, must)}
+
+
+def _question_docs(log: dict, key, terms: list[str], must: str | None) -> list[str]:
+    return list(dict.fromkeys(([must] if must else []) + [d for t in terms for d in log.get(key(t), [])]))

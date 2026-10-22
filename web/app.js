@@ -99,8 +99,8 @@ function selectTarget() {
   $("chat-area").hidden = !ready;
   $("pick-hint").hidden = Boolean(item);
   $("guide-btn").disabled = !ready || state.busy;
-  $("clear-btn").disabled = !item;
-  $("unpick-btn").disabled = !item;
+  $("clear-btn").disabled = !item || state.blocked;
+  $("unpick-btn").disabled = !item || state.blocked;
   if (item) {
     $("chat-title").textContent = `${item.name} · Spring Boot ${state.version}`;
     $("ask-input").placeholder = `${item.name} (${state.version})에 대해 궁금한 점을 물어보세요`;
