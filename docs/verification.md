@@ -53,7 +53,7 @@ graph TD;
 | 항목을 바꿨을 때 이전 대화가 섞이지 않는다 | 통과 | 캡처 ③a(Kafka 4.0.x 답변) → ③b(3.5.x로 바꾸면 빈 대화) → ③c(4.0.x로 돌아오면 대화 그대로). 대화는 localStorage `chat:{항목}\|{버전}`에 따로 저장 |
 | 조건 탐색 결과에 조건과 맞지 않는 항목이 섞이지 않는다 | 통과 ✅ | "메시징 큐에 쓸 수 있는 의존성" → rabbitmq, kafka, pulsar, activemq, artemis, solace, cloud-stream, integration (8/8 Messaging 분류). 실행에 따라 cloud-gcp-pubsub(분류 Google Cloud, 설명 Pub/Sub)도 나와, 판정은 "대부분 Messaging 분류 + 나머지도 설명이 메시징"으로 한다. 무관한 조건("냉장고 온도를 조절하는 의존성") → 빈 결과. 캡처 ④ |
 | 도메인 특화 기능 결과에도 근거가 제시된다 | 통과 ✅ | Kafka 4.0.x 가이드에 `[근거 N]`, 출처 Initializr 의존성 좌표 + 항목 정보 + Spring Boot 4.0.x 문서. 캡처 ⑤a·⑤b (좌표 `spring-boot-starter-kafka`, `spring.kafka.*` 설정, import, 근거 8건) |
-| 문서 수집과 답변 생성 중 진행 상태가 표시된다 | 통과 ✅ | `/api/ask` SSE step 전달 확인 (uvicorn 실측 0.5→1.8→2.9초에 하나씩). 캡처 ⑥(JPA 3.4.x 첫 질문: 검색어 → 후보 → 색인 → 새 청크 78건 → 답변 생성) |
+| 문서 수집과 답변 생성 중 진행 상태가 표시된다 | 통과 ✅ | `/api/ask` SSE step 전달 확인 (uvicorn 실측 0.5→1.8→2.9초에 하나씩). 캡처 ⑥(JPA 4.0.x 질문: 검색어를 뽑는 중 → 후보 문서를 찾는 중 → 이미 색인된 문서로 답합니다 → 답변을 만드는 중) |
 | 색인이 없는 상태와 API 키가 없는 상태에서 안내가 표시된다 | 통과 ✅ | `/api/status`가 키 없음 `gms_key: false`, 색인 없음 `items_total: 0`을 돌려주고 화면이 배너로 안내. 캡처 ⑦(키 없음 배너, 가이드 버튼 비활성). 색인 없음 배너는 자동 확인만 |
 | 위험 도메인이면 전문가 조언 대체 아님 안내 | 해당 없음 | 기술 문서 도메인 (requirements.md 2절 결정) |
 
@@ -64,7 +64,7 @@ graph TD;
 | F2013 화면이 HTML·CSS·JS로 동작하고 질문·답변·근거가 모두 표시된다 | 통과 | `server.py`(FastAPI) + `web/`. 캡처 ① (질문, 진행 단계, 답변, 근거 목록) |
 | F2014 유사도 검색과 MMR의 근거 목록 차이 | 통과 | rag-design.md 6.1 (5개 질문 비교, `python -m scripts.compare_search`) |
 | F2015 대표 질문의 RAG 사용 전후 답변을 나란히 확보 | 통과 | rag-comparison.md (6개 질문, 답변 전문 포함). 4절은 외부 문서 추가 전후 14개 질문 |
-| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 39개 항목에 프로젝트 문서 결합 (`data_prep/external_docs.py`), 효과는 rag-comparison.md 4절 (14개 중 11개 개선). 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑤b의 `Spring Boot 4.0.x 문서`·`Initializr 의존성 좌표`와 구분됨 |
+| F2016 근거 목록에 출처 종류가 구분 표시된다 | 통과 | 39개 항목에 프로젝트 문서 결합 (`data_prep/external_docs.py`), 효과는 rag-comparison.md 4절 (14개 중 11개 개선). 캡처 ①: SpringDoc 4.1.x 질문의 근거에 `springdoc-openapi 3.x 문서` 표시. 캡처 ⑨: Testcontainers 4.1.x 질문의 근거에 `Testcontainers 2.0.5 문서`와 `Spring Boot 4.1.x 문서`가 함께, 출처별로 구분 표시됨 |
 
 ## 4.6 RAG 사용 전후 품질 비교
 
@@ -93,7 +93,7 @@ graph TD;
 |---|---|---|
 | 필수 기능 F2001~F2012가 모두 동작한다 | 통과 | 4.1~4.4, 캡처 ①~⑦ |
 | 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(39개 항목, rag-comparison.md 4절) |
-| 증명용 스크린샷을 모두 첨부했다 | 통과 (재촬영 예정) | 아래 캡처 목록 (10장). 이후 화면이 바뀌어 최종 UI로 다시 찍는다 |
+| 증명용 스크린샷을 모두 첨부했다 | 통과 | 아래 캡처 목록 (12장, 2026-10-23 최종 UI) |
 | 요구사항 정의서·설계문서·소스코드·README.md 포함 | 통과 | `docs/requirements.md`, `docs/rag-design.md`, 소스, `README.md` |
 | 검증 결과(요구사항 대조표, 테스트 결과표, 셀프·상호 체크리스트) 포함 | 일부 | 이 문서(대조표·결과표·셀프 체크). 상호 점검은 옆 교육생이 같은 체크리스트로 진행 |
 
@@ -102,12 +102,14 @@ graph TD;
 | 번호 | 파일 | 내용 | 관련 항목 |
 |---|---|---|---|
 | ① | `01-answer-sources.png` | SpringDoc 4.1.x 질문 → 진행 단계 → 답변 → 펼친 근거 목록 (springdoc 3.x 문서) | 4.3, F2013, F2016 |
-| ② | `02-no-citation.png` | 인용된 근거가 없을 때 "답변에 인용된 근거가 없습니다" | 4.3 |
+| ② | `02-no-citation.png` | Spring Web Services 4.1.x "안녕하세요" → 짧은 안내, "ⓘ 답변에 인용된 근거가 없습니다." | 4.3 |
 | ③ | `03a`·`03b`·`03c-chat-separation.png` | Kafka 4.0.x 대화 → 3.5.x로 바꾸면 빈 대화 → 4.0.x로 돌아오면 대화 그대로 | 4.4, F2009 |
 | ④ | `04-explore-cards.png` | 조건 탐색 카드 | 4.4, F2011 |
-| ⑤ | `05a`·`05b-guide.png` | Kafka 4.0.x 버전 맞춤 사용 가이드(위·아래)와 근거 8건 | 4.4, F2010 |
-| ⑥ | `06-progress.png` | 수집 중 진행 상태 박스 | 4.4, F2012 |
+| ⑤ | `05a`·`05b-guide.png` | Kafka 4.0.x 버전 맞춤 사용 가이드: 위(의존성 선언 Gradle·Maven, 설정 속성), 아래(설정 속성, import, 근거 목록) | 4.4, F2010 |
+| ⑥ | `06-progress.png` | Spring Data JPA 4.0.x 질문의 진행 상태 박스 (단계 목록) | 4.4, F2012 |
 | ⑦ | `07-no-key.png` | 키가 없을 때 안내 배너 (`.env` 이름을 잠시 바꾸고 서버 재시작) | 4.4, F2012 |
+| ⑧ | `08-general-answer.png` | Kafka 4.0.x 브로커 힙 질문 → "문서에서 확인되지 않는다" → 💡 버튼 → "⚠ 문서 근거 없음 · 일반 지식 답변" | 4.3, (추가) 일반 지식 답변 |
+| ⑨ | `09-project-docs.png` | Testcontainers 4.1.x 질문 → 근거 목록에 Testcontainers 2.0.5 문서와 Spring Boot 4.1.x 문서 | 4.5, F2016 |
 
 ## 요구사항 대조표
 
@@ -128,6 +130,6 @@ graph TD;
 | F2013 프론트엔드 직접 구현 | `server.py`, `web/` | 4.5 |
 | F2014 MMR | `config.toml` `search.mode`, `scripts/compare_search.py` | 4.5, rag-design.md 6.1 |
 | F2015 RAG 전후 비교 | `scripts/compare_rag.py`, `docs/rag-comparison.md` | 4.6 |
-| F2016 여러 문서 출처 결합 | `data_prep/external_docs.py` (springdoc, Spring Data, Security, Kafka, AMQP, Batch, Session), `scripts/compare_sources.py` | 4.5 |
-| (추가) 일반 지식 답변 | `rag/graph.py` `general`, `rag/prompts.py` `GENERAL`, `server.py` `/api/general`, `web/app.js` | 4.3 |
+| F2016 여러 문서 출처 결합 | `data_prep/external_docs.py` (springdoc, Spring Data, Security, Kafka, AMQP, Batch, Session, Spring Cloud, Lombok, Hibernate Validator, MyBatis, Testcontainers), `scripts/compare_sources.py` | 4.5 (캡처 ⑨) |
+| (추가) 일반 지식 답변 | `rag/graph.py` `general`, `rag/prompts.py` `GENERAL`, `server.py` `/api/general`, `web/app.js` | 4.3 (캡처 ⑧) |
 | NF2001~NF2007 | 4.7 표 | 4.7 |

@@ -120,6 +120,7 @@
 - Kafka·AMQP·Batch·Session (2026-10-22): Boot 의존성 설정(4.1.x/4.0.x/3.5.x/3.4.x) Spring Kafka 4.1/4.0/3.3.16/3.3.11, Spring AMQP 4.1/4.0/3.2.12/3.2.8, Spring Batch 6.0/6.0/5.2.6/5.2.4, Spring Session 4.1.1/4.0.5/3.5.7/3.4.7. Boot 3.5·3.4가 같은 판을 쓰는 경우가 있음. Maven Central 최신 릴리스 Kafka 4.1.1/4.0.7/3.3.16, AMQP 4.1.1/4.0.5/3.2.12, Batch 6.0.5/5.2.6, Session 4.1.1/4.0.5/3.5.7/3.4.7. 저장소 모두 Apache-2.0, NOTICE 없음, 해당 브랜치 있음.
   - 문서 위치: spring-kafka-docs/src/main/antora, src/reference/antora(AMQP), spring-batch-docs, spring-session-docs. docs.spring.io는 최신판만 302(버전 없는 주소), 나머지 판은 모두 200 (Spring Data·Security와 달리 3.4 짝도 남아 있음).
 - 같은 프로젝트 문서를 쓰는 항목 12개 추가 (2026-10-22): 리액티브(data-redis-reactive, data-mongodb-reactive), kafka-streams, rabbitmq-streams, batch-jdbc, batch-data-mongodb, session-jdbc·hazelcast·data-mongodb는 기존 출처를 그대로, oauth2-resource-server·security-saml2·spring-security-webauthn은 Security의 `servlet|reactive/oauth2/resource-server/**`, `servlet/saml2/**`, `servlet/authentication/passkeys.adoc` (네 판 모두 경로 있음, 리액티브 passkeys 문서는 없음). 확인 질문: resource-server JWT 권한 클레임 → `JwtGrantedAuthoritiesConverter.setAuthoritiesClaimName`, session-jdbc 테이블 이름 → `@EnableJdbcHttpSession(tableName)`, kafka-streams 토폴로지 → `@EnableKafkaStreams` + `StreamsBuilder` 빈.
+- 캡처 재촬영 (2026-10-23): 최종 UI로 ①~⑨ 12장. ② 촬영 중 "안녕하세요"에도 항목 문서를 설명하며 근거 번호를 붙여 인용 없음 안내가 안 나옴 → 답변 프롬프트에 "기술 질문이 아니면 짧게 답하고 근거 번호를 붙이지 않는다" 규칙 추가. 3개 항목 × 2회 모두 인용 없음, 자동 확인 21/21, RAG 전후 비교 RAG 6문항 판정 같음.
 - 답변 모델 역할 분리 (2026-10-22): `config.toml` `chat`(gpt-5.4-mini, 수집·문서 근거 답변·탐색) / `general`(gpt-6.1-sol, 일반 지식 답변). 응답 메타데이터 모델 이름으로 각각 호출 확인. 아래 sol 측정이 근거.
 - `gpt-6.1-sol` 측정 (2026-10-22): GMS 모델 ID `gpt-6.1-sol` 직접 호출 성공 (`/models` 목록은 여전히 500). 대표 질문 1 4/4, 평균 7.6초(mini 4.3초). compare_rag: 사실 정확성 LLM만 5/5 → RAG 5/5(mini 2/5 → 5/5), 근거 0/5 → 5/5, 지어내지 않음 1/2 → 2/2. LLM만은 Boot 4.0 변경을 알지만 6번(브로커 힙)은 "6GB"를 지어냄. compare_sources 14개 판정 mini와 같음. rag-comparison.md 2.1절·4절·5절.
 - Testcontainers (2026-10-22): Boot 의존성 설정 4.1.x·4.0.x 2.0.5, 3.5.x 1.21.4, 3.4.x 1.20.6 (태그). MIT. mkdocs `docs/**.md`, 예제는 `<!--codeinclude-->[제목](테스트 소스) inside_block:이름`(이름 줄부터 중괄호 짝까지), 탭 `=== "Gradle"`, `{{latest_version}}`. 사이트 java.testcontainers.org(최신판만, 주소는 `경로/`). 확인 질문: 4.1.x PostgreSQL 컨테이너 테스트 → `PostgreSQLContainer`, JUnit 5 예시, 2.x 좌표 `testcontainers-postgresql` ✓, 3.5.x wait strategy → `waitingFor`, `Wait.forHealthcheck/forHttp` ✓.
@@ -166,9 +167,10 @@ items 204건 중 `doc_url`이 Spring Boot 문서인 항목 73, 외부 링크 113
 
 ## 5. 다음 작업 (순서대로)
 
-1. UI 마무리 후 화면 캡처 ①~⑦ 재촬영 + ⑧ 일반 지식 답변, ⑨ 프로젝트 문서 근거 답변 (사용자, UI가 다 끝난 뒤)
+1. 셀프 체크리스트 (양식 받으면)
 2. 상호 점검(옆 교육생)
-3. push (사용자 요청 시)
+3. 제출 zip `AI코어프로젝트2_[주제명]_지역_반_성명.zip` (지역·반·성명 필요, .env·.venv·chroma_db·문서 사본·명세 PDF 제외)
+4. push (사용자 요청 시)
 
 ## 6. 커밋 이력 요약
 - 기획 문서 → 라이브러리 버전·설정 → items 색인 (F2001, F2002)
