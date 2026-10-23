@@ -33,8 +33,8 @@
 |---|---|---|
 | Top-k를 바꾸면 근거 목록이 달라진다 | 통과 ✅ | top_k 4 → 근거 4개, 8 → 8개 (항목 정보 1 + 문서) |
 | LangGraph가 retrieve·generate 두 노드다 | 통과 ✅ | 아래 그래프 구조 출력 |
-| 답변 본문의 근거 번호와 화면의 근거 목록이 일치한다 | 통과 | 캡처 ①(본문 [근거 4] ↔ 목록 [근거 4]), ⑤b(본문 [근거 2~9] ↔ 목록 8건). 로직: `web/app.js` `citedSources` (본문의 `[근거 N]`만 목록에 표시) |
-| 근거 목록에 항목 메타데이터와 외부 문서가 구분 표시된다 | 통과 | 캡처 ⑤b(`Initializr 의존성 좌표 (4.0.8.RELEASE)`와 `Spring Boot 4.0.x 문서`가 함께), ①(`springdoc-openapi 3.x 문서`). 출처 유형: `Initializr 항목 정보`, `Initializr 의존성 좌표`, `Spring Boot {버전} 문서`, 프로젝트 문서(`springdoc-openapi 3.x 문서`, `Spring Data JPA 4.0 문서`, `Spring Security 7.0 문서` 등) |
+| 답변 본문의 근거 번호와 화면의 근거 목록이 일치한다 | 통과 | 캡처 ①(본문 [근거 7], [근거 2] ↔ 목록 [근거 2], [근거 7]), ⑨(본문 [근거 3~7] ↔ 목록 5건). 로직: `web/app.js` `citedSources` (본문의 `[근거 N]`만 목록에 표시) |
+| 근거 목록에 항목 메타데이터와 외부 문서가 구분 표시된다 | 통과 | 캡처 ⑨(`Testcontainers 2.0.5 문서`와 `Spring Boot 4.1.x 문서`가 함께), ①(`springdoc-openapi 3.x 문서`). 출처 유형: `Initializr 항목 정보`, `Initializr 의존성 좌표`, `Spring Boot {버전} 문서`, 프로젝트 문서(`springdoc-openapi 3.x 문서`, `Spring Data JPA 4.0 문서`, `Spring Security 7.0 문서` 등) |
 | 문서에 없는 것을 물으면 확인되지 않는다고 답한다 | 통과 ✅ | "Kafka 브로커에 권장되는 JVM 힙 메모리 크기는?" → "문서에서 확인되지 않는다" (rag-comparison.md 6번도 같음) |
 | (추가 기능) 문서에 답이 없을 때 요청하면 일반 지식 답변을 따로 준다 | 통과 ✅ | 답이 "확인되지 않"을 포함하거나 인용 근거가 없으면 "💡 일반 지식으로 답변 보기" 버튼. 누르면 `/api/general`이 근거 없이 답하고, 화면은 "⚠ 문서 근거 없음" 칸에 따로 표시. 문서 기반 답변(F2007)은 바뀌지 않음 |
 | 인용된 근거가 없으면 화면에 안내된다 | 통과 | 캡처 ②("안녕하세요" → "ⓘ 답변에 인용된 근거가 없습니다."). 로직: `renderSources` → "ⓘ 답변에 인용된 근거가 없습니다." |
@@ -85,7 +85,7 @@ graph TD;
 | NF2004 화면에 API 키·프롬프트 전문·오류 추적이 노출되지 않는다 | 통과 ✅ | 내부 오류를 일부러 내면 `/api/ask`는 `error` 이벤트로 짧은 안내만, `/api/explore`는 502 + 짧은 안내. 추적은 서버 콘솔에만. 화면에는 프롬프트를 보내지 않는다 |
 | NF2005 수집·색인·검색·생성·UI 모듈 분리 | 통과 | `data_prep/`(수집) · `vector_store/`(청킹·색인) · `rag/`(검색·생성) · `services/`(특화) · `server.py`+`web/`(UI). 의존 방향 CLAUDE.md |
 | NF2006 외부 호출 재시도·간격·식별 정보 | 통과 | `data_prep/boot_docs.py` `http_get`: 1.1초 간격, 3회 재시도(5xx·네트워크), GitHub 한도 초과 안내(Trees API 결과는 `.tree.json`으로 캐시해 다시 부르지 않음), User-Agent `ssafy-rag-project/0.1 (student project)`. Initializr 호출도 같은 User-Agent, 연속 호출 사이 1.1초 |
-| NF2007 데이터와 문서의 출처·이용 조건 기록 | 통과 | requirements.md 1.1 (start.spring.io, spring-boot, 프로젝트 문서 저장소, GitHub API, docs.spring.io), README "출처와 라이선스"(저장소 14곳, Apache-2.0, 수정 고지), 화면 사이드바 하단 고지 |
+| NF2007 데이터와 문서의 출처·이용 조건 기록 | 통과 | requirements.md 1.1 (start.spring.io, spring-boot, 프로젝트 문서 저장소, GitHub API, docs.spring.io), README "출처와 라이선스"(출처별 저장소, Apache-2.0 · MIT, 수정 고지), 화면 사이드바 하단 고지 |
 
 ## 4.8 제출 전 점검
 
@@ -95,7 +95,7 @@ graph TD;
 | 선택한 심화 기능이 동작하고 필수 기능 결과와 비교되어 있다 | 통과 | F2013(캡처 ①), F2014(6.1), F2015(rag-comparison.md), F2016(39개 항목, rag-comparison.md 4절) |
 | 증명용 스크린샷을 모두 첨부했다 | 통과 | 아래 캡처 목록 (12장, 2026-10-23 최종 UI) |
 | 요구사항 정의서·설계문서·소스코드·README.md 포함 | 통과 | `docs/requirements.md`, `docs/rag-design.md`, 소스, `README.md` |
-| 검증 결과(요구사항 대조표, 테스트 결과표, 셀프·상호 체크리스트) 포함 | 일부 | 이 문서(대조표·결과표·셀프 체크). 상호 점검은 옆 교육생이 같은 체크리스트로 진행 |
+| 검증 결과(요구사항 대조표, 테스트 결과표, 셀프·상호 체크리스트) 포함 | 일부 | 이 문서(대조표·결과표), 셀프 체크리스트(`docs/checklist/2회차_셀프·상호_체크리스트.xlsx`, 2026-10-23). 상호 점검은 옆 교육생이 같은 체크리스트로 진행 |
 
 ## 캡처 목록 (`docs/screenshots/`)
 

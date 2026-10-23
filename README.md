@@ -4,6 +4,19 @@ Spring Initializr 의존성과 Spring Boot 버전을 고르면, **그 버전의 
 
 같은 질문이라도 버전에 따라 답이 달라진다. 예를 들어 Kafka의 JSON 역직렬화 클래스는 3.5에서 `JsonDeserializer`, 4.0에서 `JacksonJsonDeserializer`다. 근거 없이 답하는 LLM은 4.0 질문에도 3.x 지식으로 답한다 ([RAG 전후 비교](docs/rag-comparison.md)).
 
+## 제출물 안내
+
+| 제출물 | 위치 |
+|---|---|
+| 요구사항 정의서 | [docs/requirements.md](docs/requirements.md) |
+| RAG 파이프라인 설계문서 | [docs/rag-design.md](docs/rag-design.md) |
+| 소스코드 | `server.py`, `web/`, `rag/`, `services/`, `data_prep/`, `vector_store/`, `scripts/`, `config.toml` |
+| README | 이 문서 |
+| 검증 결과 (요구사항 대조표·테스트 결과표) | [docs/verification.md](docs/verification.md), 자동 확인 출력 [docs/verify-output.md](docs/verify-output.md) |
+| RAG 전후 비교 (F2015) | [docs/rag-comparison.md](docs/rag-comparison.md) |
+| 셀프·상호 체크리스트 | [docs/checklist/](docs/checklist/) |
+| 화면 캡처 | [docs/screenshots/](docs/screenshots/) (목록은 verification.md "캡처 목록") |
+
 ## 기능
 
 | 구분 | 기능 | 설명 |
